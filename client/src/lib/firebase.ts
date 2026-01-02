@@ -1,5 +1,5 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence, onAuthStateChanged } from "firebase/auth";
+import { initializeApp, type FirebaseApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence, onAuthStateChanged, type Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -9,32 +9,42 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
+const isFirebaseConfigured = Boolean(
+  import.meta.env.VITE_FIREBASE_API_KEY && 
+  import.meta.env.VITE_FIREBASE_PROJECT_ID && 
+  import.meta.env.VITE_FIREBASE_APP_ID
+);
 
-// Standardize Google provider
-googleProvider.setCustomParameters({
-  prompt: 'select_account'
-});
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let googleProvider: GoogleAuthProvider | null = null;
 
-// Ensure session persistence
-setPersistence(auth, browserLocalPersistence);
+if (isFirebaseConfigured) {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  googleProvider = new GoogleAuthProvider();
+  googleProvider.setCustomParameters({
+    prompt: 'select_account'
+  });
+  setPersistence(auth, browserLocalPersistence);
+}
+
+export { auth, googleProvider };
 
 export const loginWithGoogle = async () => {
+  if (!auth || !googleProvider) {
+    throw new Error("Firebase is not configured. Please set up Firebase credentials.");
+  }
   try {
     const result = await signInWithPopup(auth, googleProvider);
     console.log("Sign-in successful:", result.user.email);
     
-    // Explicitly store a flag in localStorage to help with persistence debugging
     localStorage.setItem("auth_provider", "google");
     localStorage.setItem("last_login", new Date().toISOString());
     
     return result.user;
   } catch (error: any) {
     console.error("Firebase popup sign-in error:", error.code, error.message);
-    // Handle specific errors like blocked popups
     if (error.code === 'auth/popup-blocked') {
       alert("Please enable popups for this site to sign in.");
     } else {
@@ -47,7 +57,10 @@ export const loginWithGoogle = async () => {
 export const logout = () => {
   localStorage.removeItem("auth_provider");
   localStorage.removeItem("last_login");
-  return auth.signOut();
+  if (auth) {
+    return auth.signOut();
+  }
+  return Promise.resolve();
 };
 
 export const handleAuthRedirect = () => Promise.resolve(null);

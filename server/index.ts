@@ -4,7 +4,7 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import cron from "node-cron";
 import { storage } from "./storage";
-import { openai } from "./replit_integrations/image/client";
+import { getOpenAI } from "./replit_integrations/image/client";
 
 const app = express();
 const httpServer = createServer(app);
@@ -104,7 +104,7 @@ app.use((req, res, next) => {
         if (workflow.enabled) {
           log(`Executing workflow: ${workflow.name}`, "cron");
           try {
-            const response = await openai.chat.completions.create({
+            const response = await getOpenAI().chat.completions.create({
               model: settings.captionModel,
               messages: [{ role: "user", content: `Generate a scheduled post for ${settings.niche}` }],
             });
