@@ -73,7 +73,7 @@ export class FirebaseStorage implements IStorage {
 
   async getWorkflows() {
     const snapshot = await this.workflowsCol.get();
-    return snapshot.docs.map(doc => doc.data() as Workflow);
+    return snapshot.docs.map((doc: any) => doc.data() as Workflow);
   }
 
   async updateWorkflow(id: number, enabled: boolean) {
@@ -88,7 +88,7 @@ export class FirebaseStorage implements IStorage {
 
   async getContent() {
     const snapshot = await this.contentCol.get();
-    return snapshot.docs.map(doc => doc.data() as Content);
+    return snapshot.docs.map((doc: any) => doc.data() as Content);
   }
 
   async createContent(data: any) {
