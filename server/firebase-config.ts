@@ -8,9 +8,7 @@ if (!getApps().length) {
 
   if (projectId && clientEmail && privateKey) {
     try {
-      const formattedKey = privateKey.includes("\\n") 
-        ? privateKey.replace(/\\n/g, '\n') 
-        : privateKey;
+      const formattedKey = privateKey.replace(/\\n/g, '\n');
 
       admin.initializeApp({
         credential: admin.credential.cert({
@@ -22,11 +20,11 @@ if (!getApps().length) {
       console.log("Firebase Admin initialized successfully with provided credentials.");
     } catch (error) {
       console.error("Firebase Admin initialization failed:", error);
-      admin.initializeApp({
-        credential: admin.credential.applicationDefault(),
-      });
+      // Don't fall back if we have keys but they are wrong, it's better to fail clearly
+      throw error;
     }
   } else {
+    console.warn("Firebase credentials missing, attempting applicationDefault...");
     admin.initializeApp({
       credential: admin.credential.applicationDefault(),
     });
