@@ -30,16 +30,26 @@ export class DatabaseStorage implements IStorage {
   }
   async getLimits() {
     const [l] = await db.select().from(limits);
+    if (!l) {
+      // Create default limits if none exist
+      const [created] = await db.insert(limits).values({
+        textLimit: 100,
+        imageLimit: 50,
+        videoLimit: 10,
+        textUsed: 0,
+        imageUsed: 0,
+        videoUsed: 0,
+        lastResetDate: new Date()
+      }).returning();
+      return created;
+    }
     return l;
   }
   async updateLimits(data: any) {
     const existing = await this.getLimits();
-    if (existing) {
-      const [updated] = await db.update(limits).set(data).where(eq(limits.id, existing.id)).returning();
-      return updated;
-    }
-    const [created] = await db.insert(limits).values(data).returning();
-    return created;
+    // existing is guaranteed to be defined because getLimits creates it if missing
+    const [updated] = await db.update(limits).set(data).where(eq(limits.id, existing!.id)).returning();
+    return updated;
   }
   async getWorkflows() {
     return await db.select().from(workflows);
