@@ -1,5 +1,5 @@
-import express, { type Request, Response, NextFunction } from "express";
-import { setupVite, serveStatic, log } from "./vite";
+import express, { type Request, Response } from "express";
+import { setupVite, log } from "./vite";
 import OpenAI from "openai";
 import { Anthropic } from "@anthropic-ai/sdk";
 import { GoogleGenerativeAI } from "@google/genai";
@@ -82,9 +82,11 @@ app.post("/api/content/generate", async (req: Request, res: Response) => {
 
 // Vercel deployment support
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "public")));
+  // Use "dist" instead of "dist/public" as per vite build output
+  const distPath = path.join(__dirname, "..", "dist");
+  app.use(express.static(distPath));
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(path.join(distPath, "index.html"));
   });
 } else {
   (async () => {

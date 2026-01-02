@@ -1,0 +1,38 @@
+21:38:00.570 Running build in Washington, D.C., USA (East) – iad1
+21:38:00.571 Build machine configuration: 2 cores, 8 GB
+21:38:00.716 Cloning github.com/masharzya1/auto-post (Branch: main, Commit: 83ad386)
+21:38:01.058 Cloning completed: 342.000ms
+21:38:01.480 Restored build cache from previous deployment (6n1gRT4nNga4mkMrp9L5EyvXcz7z)
+21:38:02.221 Running "vercel build"
+21:38:02.655 Vercel CLI 50.1.3
+21:38:02.825 WARN! Due to `builds` existing in your configuration file, the Build and Development Settings defined in your Project Settings will not apply. Learn More: https://vercel.link/unused-build-settings
+21:38:03.352 Installing dependencies...
+21:38:05.622 npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+21:38:06.362 
+21:38:06.363 added 45 packages in 3s
+21:38:06.363 
+21:38:06.364 88 packages are looking for funding
+21:38:06.364   run `npm fund` for details
+21:38:06.404 Running "npm run vercel-build"
+21:38:06.510 
+21:38:06.511 > rest-express@1.0.0 vercel-build
+21:38:06.511 > vite build
+21:38:06.511 
+21:38:06.881 [36mvite v7.3.0 [32mbuilding client environment for production...[36m[39m
+21:38:06.955 transforming...
+21:38:08.304 
+21:38:08.305 A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+21:38:12.865 [32m✓[39m 1873 modules transformed.
+21:38:13.417 rendering chunks...
+21:38:13.434 computing gzip size...
+21:38:13.463 [2m../dist/[22m[32mindex.html                [39m[1m[2m  2.01 kB[22m[1m[22m[2m │ gzip:   0.77 kB[22m
+21:38:13.464 [2m../dist/[22m[2massets/[22m[35mmain-KI29wee7.css  [39m[1m[2m 75.49 kB[22m[1m[22m[2m │ gzip:  12.11 kB[22m
+21:38:13.464 [2m../dist/[22m[2massets/[22m[36mmain-dkHa5mFm.js   [39m[1m[33m852.07 kB[39m[22m[2m │ gzip: 261.36 kB[22m
+21:38:13.464 [33m
+21:38:13.465 (!) Some chunks are larger than 500 kB after minification. Consider:
+21:38:13.465 - Using dynamic import() to code-split the application
+21:38:13.465 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+21:38:13.466 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+21:38:13.466 [32m✓ built in 6.55s[39m
+21:38:13.548 Error: No Output Directory named "public" found after the Build completed. Configure the Output Directory in your Project Settings. Alternatively, configure vercel.json#outputDirectory.
+21:38:13.548 Learn More: https://vercel.link/missing-public-directory
