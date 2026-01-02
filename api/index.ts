@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "../server/routes";
-import "./firebase-config"; // Initialize Firebase
+import { registerRoutes } from "../server/routes.js";
+import "./firebase-config.js"; // Initialize Firebase
 
 const app = express();
 

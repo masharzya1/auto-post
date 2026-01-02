@@ -1,11 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { serveStatic } from "./static";
+import { registerRoutes } from "./routes.js";
+import { serveStatic } from "./static.js";
 import { createServer } from "http";
 import cron from "node-cron";
-import { storage } from "./storage";
-import { getOpenAIInstance } from "./ai_integrations/image/client";
-import "./firebase-config"; // Initialize Firebase
+import { storage } from "./storage.js";
+import { getOpenAIInstance } from "./ai_integrations/image/client.js";
+import "./firebase-config.js"; // Initialize Firebase
 const app = express();
 const httpServer = createServer(app);
 

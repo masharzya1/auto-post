@@ -1,9 +1,9 @@
 import type { Express } from "express";
 import type { Server } from "http";
-import { storage } from "./storage";
-import { content, workflows, users, api, insertWorkflowSchema } from "@shared/schema";
+import { storage } from "./storage.js";
+import { content, workflows, users, api, insertWorkflowSchema } from "@shared/schema.js";
 
-import { getOpenAIInstance } from "./ai_integrations/image/client";
+import { getOpenAIInstance } from "./ai_integrations/image/client.js";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   app.post("/api/auth/sync", async (req, res) => {

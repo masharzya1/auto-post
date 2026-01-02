@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import OpenAI, { toFile } from "openai";
-import { storage } from "../../storage";
+import { storage } from "../../storage.js";
 
 export async function getOpenAIInstance(): Promise<OpenAI> {
   const settings = await storage.getSettings();
