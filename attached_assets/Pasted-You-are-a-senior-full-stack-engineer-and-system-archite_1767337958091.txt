@@ -1,0 +1,240 @@
+You are a senior full-stack engineer and system architect.
+
+Build a production-grade web application using:
+- React (Vite)
+- Plain JavaScript only (NO TypeScript)
+- Node.js
+- Firebase (Firestore)
+- Deployable on Vercel
+- Client-side heavy processing (no long server rendering)
+
+--------------------------------
+PROJECT OVERVIEW
+--------------------------------
+This app is an AI-powered content automation platform inspired by n8n,
+designed for NON-TECHNICAL users.
+
+The system allows a single owner to:
+- Configure all automation settings once
+- Store configuration in Firebase
+- Run cron-based automation even when browser is closed
+- Generate AI text, images, and SHORT videos
+- Generate videos directly inside the browser
+- Prepare content for Facebook and YouTube Shorts
+
+--------------------------------
+DATA STORAGE RULES
+--------------------------------
+- Firebase Firestore MUST be used
+- No other database allowed
+- Firestore is the SINGLE SOURCE OF TRUTH
+- localStorage may be used only for UI cache
+
+--------------------------------
+ENVIRONMENT VARIABLES (.env)
+--------------------------------
+Use `.env` ONLY for secrets:
+
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+
+--------------------------------
+FIREBASE DATA MODEL (MANDATORY)
+--------------------------------
+
+Collection: settings
+Document: main
+
+Fields:
+- fbPageId (string)
+- ytChannelId (string)
+- niche (string)
+- postsPerWeek (number)
+- videosPerDay (number)
+- randomPostingTime (boolean)
+
+Collection: limits
+Document: daily
+
+Fields:
+- textLimit (number)
+- imageLimit (number)
+- videoLimit (number)
+- textUsed (number)
+- imageUsed (number)
+- videoUsed (number)
+- lastResetDate (timestamp)
+
+Collection: workflows
+Document per workflow
+
+Fields:
+- name (string)
+- enabled (boolean)
+- lastRun (timestamp)
+
+--------------------------------
+PAGES
+--------------------------------
+
+1) HOME PAGE  (/)
+- Visual workflow UI similar to n8n (flowchart blocks)
+- Blocks:
+  - Content Planner
+  - Text Generator
+  - Image Generator
+  - Video Generator
+  - Scheduler
+- Each block shows:
+  - Enabled / Disabled
+  - Last execution time
+  - Daily usage progress
+
+2) SETUP PAGE (/setup)
+A SINGLE unified setup page.
+
+Each input field MUST include:
+- Input component
+- Description text below explaining:
+  - Where to get this data
+  - Why it is needed
+
+FIELDS:
+
+--- Facebook Page ID ---
+Help text:
+"Go to Facebook Page → Settings → Page Info → Copy Page ID."
+
+--- YouTube Channel ID ---
+Help text:
+"Open YouTube Studio → Settings → Channel → Basic info."
+
+--- Posting Schedule ---
+Inputs:
+- Posts per week
+- Videos per day
+- Random time toggle
+
+Help text:
+"Controls how often the system prepares content automatically."
+
+--- Niche Selector ---
+Options:
+- Motivation
+- Islamic
+- Facts
+- Tech
+- News
+
+Help text:
+"Content tone and ideas depend on this niche."
+
+--- AI Usage Limits ---
+Inputs:
+- Max texts per day
+- Max images per day
+- Max videos per day
+
+Help text:
+"Prevents exceeding free AI usage."
+
+--- Usage Warnings ---
+- Warning at 80%
+- Hard stop at 100%
+
+--------------------------------
+CRON JOB SYSTEM (VERY IMPORTANT)
+--------------------------------
+
+Implement cron jobs using:
+- Vercel Cron Jobs (preferred)
+OR
+- node-cron (for Replit development)
+
+Cron job responsibilities:
+- Run every 15 or 30 minutes
+- Read schedule & limits from Firestore
+- Decide:
+  - Should content be prepared now?
+  - Are daily limits exceeded?
+- Update Firestore with:
+  - textUsed
+  - imageUsed
+  - videoUsed
+  - lastRun timestamps
+
+Include:
+- Cron setup code
+- Clear comments explaining logic
+- Explanation of which Firestore fields are read/written
+
+--------------------------------
+VIDEO GENERATION (MANDATORY)
+--------------------------------
+- Video generation MUST happen inside the browser
+- Use ffmpeg.wasm
+- No server-side video rendering
+
+Video requirements:
+- Vertical format (9:16)
+- 15–30 seconds
+- Images + text overlays
+- Bangla subtitles burned
+- Fade transitions
+- Zoom / pan effect
+- Progress bar while rendering
+
+User flow:
+- Dashboard shows "Video Ready"
+- User clicks "Generate Video"
+- Browser renders MP4
+- File becomes downloadable / upload-ready
+
+--------------------------------
+WORKFLOW LOGIC
+--------------------------------
+- Each workflow step is modular
+- Can be enabled/disabled
+- Visual execution order
+- Status indicators:
+  - Idle
+  - Scheduled
+  - Ready
+  - Limit reached
+
+--------------------------------
+FOLDER STRUCTURE
+--------------------------------
+/src
+  /components
+  /pages
+  /workflow
+  /cron
+  /video
+  /firebase
+  /utils
+  App.jsx
+  main.jsx
+
+--------------------------------
+IMPORTANT NOTES
+--------------------------------
+- Browser may be closed; cron must still work
+- Firestore is the only persistent storage
+- Rendering happens only when user opens the app
+- Code must be heavily commented
+- Architecture must be scalable
+
+--------------------------------
+DELIVERABLE
+--------------------------------
+- Fully working React app
+- Firebase integrated correctly
+- Cron job logic implemented
+- Setup page with clear help text
+- Client-side video generation working
+- Clean, readable, production-ready code
