@@ -99,7 +99,7 @@ export default function Dashboard() {
                     <Zap className="h-6 w-6" />
                   </div>
                   <h3 className="font-bold text-lg">1. Connect Socials</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Visit <b>Settings</b>. You need your <b>Facebook Page ID</b> (found in Page 'About' -> Page Transparency) and a <b>System Token</b> from Facebook's Developer Portal.</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Visit <b>Settings</b>. You need your <b>Facebook Page ID</b> (found in Page 'About' -{'>'} Page Transparency) and a <b>System Token</b> from Facebook's Developer Portal.</p>
                 </div>
 
                 <div className="p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border-2 border-black dark:border-white space-y-3">

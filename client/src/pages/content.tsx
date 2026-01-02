@@ -131,9 +131,9 @@ export default function ContentPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={item.status === "ready" ? "default" : "secondary"} className="text-[10px] h-5 capitalize">
-                  {item.status}
-                </Badge>
+                  <Badge variant={item.status === "ready" ? "default" : "secondary"} className="text-[10px] h-5 capitalize">
+                    {item.workflowId ? "Auto" : "Manual"} • {item.status}
+                  </Badge>
                 <Button 
                   variant="ghost" 
                   size="icon" 
