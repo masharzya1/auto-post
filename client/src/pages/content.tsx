@@ -154,10 +154,40 @@ export default function ContentPage() {
                 )}
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1 h-9 font-bold bg-background">
-                  <Eye className="h-3.5 w-3.5 mr-1.5" />
-                  Inspect
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex-1 h-9 font-bold bg-background">
+                      <Eye className="h-3.5 w-3.5 mr-1.5" />
+                      Inspect
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl bg-white dark:bg-gray-950">
+                    <DialogHeader>
+                      <DialogTitle className="capitalize">{item.type} Details</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                      {item.type === "image" && (item.data as any).url ? (
+                        <div className="rounded-xl overflow-hidden border">
+                          <img src={(item.data as any).url} alt="Generated" className="w-full h-auto" />
+                        </div>
+                      ) : (
+                        <div className="p-6 rounded-xl bg-muted/30 border text-sm leading-relaxed whitespace-pre-wrap">
+                          {(item.data as any).text || (item.data as any).prompt}
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-4 text-xs">
+                        <div className="p-3 rounded-lg bg-muted/20">
+                          <p className="text-muted-foreground mb-1 uppercase tracking-wider font-bold">Status</p>
+                          <p className="font-semibold capitalize">{item.status}</p>
+                        </div>
+                        <div className="p-3 rounded-lg bg-muted/20">
+                          <p className="text-muted-foreground mb-1 uppercase tracking-wider font-bold">Created At</p>
+                          <p className="font-semibold">{new Date(item.createdAt).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <Button 
                   variant="default" 
                   size="sm" 

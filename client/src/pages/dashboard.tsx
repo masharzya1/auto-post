@@ -7,6 +7,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { useQuery } from "@tanstack/react-query";
+import { Sparkles, Image, Video, FileText, Zap, Clock, Send, BarChart3, Info, PlayCircle, BookOpen, Rocket, ShieldCheck } from "lucide-react";
+import type { Limits, Content, Workflow } from "@shared/schema";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+
 export default function Dashboard() {
   const { data: limits, isLoading: isLoadingLimits } = useQuery<Limits>({
     queryKey: ["/api/limits"],
@@ -68,9 +79,66 @@ export default function Dashboard() {
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight">System Overview</h1>
-        <p className="text-muted-foreground font-medium">Monitoring your AI content production engine.</p>
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-bold tracking-tight">System Overview</h1>
+          <p className="text-muted-foreground font-medium">Monitoring your AI content production engine.</p>
+        </div>
+
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button size="lg" className="gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 font-bold shadow-xl hover:scale-105 transition-all">
+              <BookOpen className="h-5 w-5" />
+              Instruction Guide
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl bg-white dark:bg-gray-950 p-0 overflow-hidden border-none shadow-2xl">
+            <div className="h-2 w-full bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500" />
+            <div className="p-8 space-y-8">
+              <DialogHeader>
+                <DialogTitle className="text-3xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-3">
+                  <Rocket className="h-8 w-8 text-blue-600" />
+                  How to use AI Automator
+                </DialogTitle>
+                <CardDescription className="text-base font-medium">Follow this colorful guide to master your AI content engine.</CardDescription>
+              </DialogHeader>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="p-5 rounded-2xl bg-blue-500/5 border border-blue-500/20 space-y-3">
+                  <div className="h-10 w-10 rounded-xl bg-blue-500 flex items-center justify-center text-white shadow-lg">
+                    <Zap className="h-6 w-6" />
+                  </div>
+                  <h3 className="font-bold text-lg">1. Setup Engine</h3>
+                  <p className="text-sm text-muted-foreground">Go to <b>Settings</b> and enter your Facebook Page ID and AI API secrets. This connects your social power.</p>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-purple-500/5 border border-purple-500/20 space-y-3">
+                  <div className="h-10 w-10 rounded-xl bg-purple-500 flex items-center justify-center text-white shadow-lg">
+                    <Clock className="h-6 w-6" />
+                  </div>
+                  <h3 className="font-bold text-lg">2. Automated Flow</h3>
+                  <p className="text-sm text-muted-foreground">In <b>Workflows</b>, pick a time (like 9 AM) and name your routine. The AI will wake up and create content for you!</p>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-pink-500/5 border border-pink-500/20 space-y-3">
+                  <div className="h-10 w-10 rounded-xl bg-pink-500 flex items-center justify-center text-white shadow-lg">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+                  <h3 className="font-bold text-lg">3. Creative Control</h3>
+                  <p className="text-sm text-muted-foreground">Visit <b>Content Library</b>. Click "Inspect" to see AI work, and "Deploy" to send it live to your audience instantly.</p>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-green-500/5 border border-green-500/20 space-y-3">
+                  <div className="h-10 w-10 rounded-xl bg-green-500 flex items-center justify-center text-white shadow-lg">
+                    <ShieldCheck className="h-6 w-6" />
+                  </div>
+                  <h3 className="font-bold text-lg">4. Safe Monitoring</h3>
+                  <p className="text-sm text-muted-foreground">Watch your <b>Dashboard</b> (here!) to track your monthly limits and see recent engagement growth.</p>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Guide Section */}
@@ -81,21 +149,21 @@ export default function Dashboard() {
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            Quick Start Guide
+            Quick Start Summary
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-3">
           <div className="space-y-1">
             <p className="text-sm font-bold">1. Configure Settings</p>
-            <p className="text-xs text-muted-foreground">Add your Facebook Page ID and AI API keys in the settings panel.</p>
+            <p className="text-xs text-muted-foreground">Add Page ID and secrets in the settings panel.</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm font-bold">2. Create Workflows</p>
-            <p className="text-xs text-muted-foreground">Setup automation schedules in the Workflows page for hands-free posting.</p>
+            <p className="text-xs text-muted-foreground">Setup schedules for hands-free posting.</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm font-bold">3. Generate & Post</p>
-            <p className="text-xs text-muted-foreground">Use the Content Library to manually generate and review assets before deployment.</p>
+            <p className="text-xs text-muted-foreground">Manually generate or review assets before deployment.</p>
           </div>
         </CardContent>
       </Card>
