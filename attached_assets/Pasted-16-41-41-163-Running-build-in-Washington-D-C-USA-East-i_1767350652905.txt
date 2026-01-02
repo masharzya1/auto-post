@@ -1,0 +1,51 @@
+16:41:41.163 Running build in Washington, D.C., USA (East) – iad1
+16:41:41.170 Build machine configuration: 2 cores, 8 GB
+16:41:41.518 Cloning github.com/masharzya1/auto-post (Branch: main, Commit: add4709)
+16:41:41.520 Previous build caches not available.
+16:41:41.997 Cloning completed: 479.000ms
+16:41:45.850 Running "vercel build"
+16:41:46.282 Vercel CLI 50.1.3
+16:41:48.232 Installing dependencies...
+16:42:01.473 
+16:42:01.473 added 566 packages in 13s
+16:42:01.474 
+16:42:01.475 71 packages are looking for funding
+16:42:01.475   run `npm fund` for details
+16:42:01.526 Running "npm run build"
+16:42:01.627 
+16:42:01.628 > rest-express@1.0.0 build
+16:42:01.628 > tsx script/build.ts
+16:42:01.628 
+16:42:02.538 building client...
+16:42:02.621 [36mvite v7.3.0 [32mbuilding client environment for production...[36m[39m
+16:42:02.932 transforming...
+16:42:04.068 
+16:42:04.068 A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+16:42:07.482 [32m✓[39m 1853 modules transformed.
+16:42:07.853 rendering chunks...
+16:42:07.904 computing gzip size...
+16:42:08.027 [2m../dist/public/[22m[32mindex.html                 [39m[1m[2m  2.01 kB[22m[1m[22m[2m │ gzip:   0.77 kB[22m
+16:42:08.027 [2m../dist/public/[22m[2massets/[22m[35mindex-D6xh0SyP.css  [39m[1m[2m 78.59 kB[22m[1m[22m[2m │ gzip:  12.41 kB[22m
+16:42:08.027 [2m../dist/public/[22m[2massets/[22m[36mindex-DFx8LNNO.js   [39m[1m[33m597.80 kB[39m[22m[2m │ gzip: 182.42 kB[22m
+16:42:08.027 [32m✓ built in 5.13s[39m
+16:42:08.027 building server...
+16:42:08.027 [33m
+16:42:08.028 (!) Some chunks are larger than 500 kB after minification. Consider:
+16:42:08.028 - Using dynamic import() to code-split the application
+16:42:08.028 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+16:42:08.028 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+16:42:08.346 
+16:42:08.347   dist/index.cjs  1.1mb ⚠️
+16:42:08.347 
+16:42:08.347 ⚡ Done in 284ms
+16:42:08.698 Using TypeScript 5.6.3 (local user-provided)
+16:42:14.264 server/replit_integrations/image/client.ts(34,18): error TS18048: 'response.data' is possibly 'undefined'.
+16:42:14.264 server/replit_integrations/image/client.ts(61,23): error TS18048: 'response.data' is possibly 'undefined'.
+16:42:14.265 
+16:42:24.191 Build Completed in /vercel/output [36s]
+16:42:24.571 Deploying outputs...
+16:42:33.641 Deployment completed
+16:42:34.647 Creating build cache...
+16:43:01.999 Created build cache: 27.350s
+16:43:02.000 Uploading build cache [96.92 MB]
+16:43:03.806 Build cache uploaded: 1.806s
