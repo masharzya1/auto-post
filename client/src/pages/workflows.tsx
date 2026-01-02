@@ -82,13 +82,47 @@ export default function WorkflowsPage() {
   });
 
   const triggerMutation = useMutation({
-    mutationFn: async (id: string | number) => {
-      await new Promise(r => setTimeout(r, 1000));
-      return id;
+    mutationFn: async (workflow: Workflow) => {
+      if (!db || !auth?.currentUser) throw new Error("Not authenticated");
+      
+      // Direct generation logic for "Run Now"
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: workflow.contentType === "image_text" ? "text" : workflow.contentType,
+          niche: workflow.niche || "General",
+          model: "gpt-4o-mini", // Fallback to default or use settings
+          provider: "openai",
+          apiKey: (await (await fetch("/api/settings")).json()).openaiApiKey
+        })
+      });
+      
+      const result = await response.json();
+      
+      // Save to content table via Firebase
+      await addDoc(collection(db, "content"), {
+        workflowId: workflow.id,
+        userId: auth.currentUser.uid,
+        type: workflow.contentType,
+        data: result,
+        status: "pending",
+        createdAt: new Date().toISOString()
+      });
+      
+      return workflow.id;
     },
     onSuccess: () => {
       setIsTriggering(null);
-      toast({ title: "Workflow triggered manually" });
+      toast({ title: "Content generated and added to queue" });
+    },
+    onError: (error: any) => {
+      setIsTriggering(null);
+      toast({ 
+        title: "Generation failed", 
+        description: error.message,
+        variant: "destructive"
+      });
     }
   });
 
@@ -417,7 +451,7 @@ export default function WorkflowsPage() {
                   disabled={isTriggering === (workflow.id as unknown as string)}
                   onClick={() => {
                     setIsTriggering(workflow.id as unknown as string);
-                    triggerMutation.mutate(workflow.id as unknown as string);
+                    triggerMutation.mutate(workflow);
                   }}
                 >
                   {isTriggering === (workflow.id as unknown as string) ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
