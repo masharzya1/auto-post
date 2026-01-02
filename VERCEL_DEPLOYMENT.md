@@ -8,7 +8,8 @@ To deploy this project successfully to Vercel, add these variables in your Verce
 ## Firebase Admin (Server-side)
 - `FIREBASE_PROJECT_ID`: Your Firebase project ID.
 - `FIREBASE_CLIENT_EMAIL`: Your Firebase service account email.
-- `FIREBASE_PRIVATE_KEY`: Your Firebase private key (ensure newlines `\n` are preserved).
+- `FIREBASE_PRIVATE_KEY`: Your Firebase private key. 
+    > **Tip for Vercel**: When adding this to Vercel, make sure it includes the full key starting with `-----BEGIN PRIVATE KEY-----` and ending with `-----END PRIVATE KEY-----`. If you encounter issues, try wrapping the entire value in double quotes.
 
 ## Firebase Client (Frontend)
 - `VITE_FIREBASE_API_KEY`: Your Firebase API key.

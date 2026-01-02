@@ -26,22 +26,32 @@ export class FirebaseStorage implements IStorage {
   private usersCol = adminDb.collection("users");
 
   async getSettings() {
-    const snapshot = await this.settingsCol.limit(1).get();
-    if (snapshot.empty) return undefined;
-    return snapshot.docs[0].data() as Settings;
+    try {
+      const snapshot = await this.settingsCol.limit(1).get();
+      if (snapshot.empty) return undefined;
+      return snapshot.docs[0].data() as Settings;
+    } catch (error) {
+      console.error("Error fetching settings from Firestore:", error);
+      return undefined;
+    }
   }
 
   async updateSettings(data: any) {
-    const existing = await this.getSettings();
-    if (existing) {
-      const snapshot = await this.settingsCol.limit(1).get();
-      const doc = snapshot.docs[0];
-      await doc.ref.update(data);
-      return { ...doc.data(), ...data } as Settings;
+    try {
+      const existing = await this.getSettings();
+      if (existing) {
+        const snapshot = await this.settingsCol.limit(1).get();
+        const doc = snapshot.docs[0];
+        await doc.ref.update(data);
+        return { ...doc.data(), ...data } as Settings;
+      }
+      const docRef = await this.settingsCol.add({ ...data, id: 1 });
+      const doc = await docRef.get();
+      return doc.data() as Settings;
+    } catch (error) {
+      console.error("Error updating settings in Firestore:", error);
+      throw error;
     }
-    const docRef = await this.settingsCol.add({ ...data, id: 1 });
-    const doc = await docRef.get();
-    return doc.data() as Settings;
   }
 
   async getLimits() {
