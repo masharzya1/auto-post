@@ -1,9 +1,7 @@
 import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
-import { db } from "./db";
 import { content, workflows, users, api, insertWorkflowSchema } from "@shared/schema";
-import { eq } from "drizzle-orm";
 
 import { getOpenAIInstance } from "./ai_integrations/image/client";
 
@@ -12,12 +10,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const { uid, email } = req.body;
     if (!uid || !email) return res.status(400).send("Missing data");
     
-    const [existing] = await db.select().from(users).where(eq(users.firebaseUid, uid));
-    if (existing) {
-      const [updated] = await db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, existing.id)).returning();
-      return res.json(updated);
+    // User syncing via storage (Firestore)
+    let user = await storage.getUserByFirebaseUid(uid);
+    if (user) {
+      user = await storage.updateUser(user.id, { lastLogin: new Date() });
+      return res.json(user);
     }
-    const [created] = await db.insert(users).values({ firebaseUid: uid, email }).returning();
+    const created = await storage.createUser({ firebaseUid: uid, email });
     res.json(created);
   });
 
@@ -49,7 +48,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/workflows", async (req, res) => {
     const parsed = insertWorkflowSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: parsed.error });
-    const [created] = await db.insert(workflows).values(parsed.data).returning();
+    const created = await storage.createWorkflow(parsed.data);
     res.json(created);
   });
 
@@ -61,7 +60,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.patch("/api/workflows/:id", async (req, res) => {
     const { id } = req.params;
     const { cronSchedule } = req.body;
-    const [updated] = await db.update(workflows).set({ cronSchedule }).where(eq(workflows.id, Number(id))).returning();
+    const updated = await storage.updateWorkflow(Number(id), undefined, { cronSchedule });
     res.json(updated);
   });
 
@@ -113,7 +112,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const created = await Promise.all(contentItems.map(item => storage.createContent(item)));
       
-      await db.update(workflows).set({ lastRun: new Date() }).where(eq(workflows.id, Number(id)));
+      await storage.updateWorkflow(Number(id), undefined, { lastRun: new Date() });
 
       res.json(created);
     } catch (err: any) {
@@ -150,7 +149,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/content/:id/post", async (req, res) => {
     try {
-      const [item] = await db.select().from(content).where(eq(content.id, Number(req.params.id)));
+      const item = await storage.getContentById(Number(req.params.id));
       if (!item) return res.status(404).json({ error: "Content not found" });
       const s = await storage.getSettings();
       if (!s?.fbAccessToken || !s?.fbPageId) return res.status(400).json({ error: "Facebook configuration is missing. Please check your settings." });
