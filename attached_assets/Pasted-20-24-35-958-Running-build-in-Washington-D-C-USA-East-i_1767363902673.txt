@@ -1,0 +1,46 @@
+20:24:35.958 Running build in Washington, D.C., USA (East) – iad1
+20:24:35.964 Build machine configuration: 2 cores, 8 GB
+20:24:36.269 Cloning github.com/masharzya1/auto-post (Branch: main, Commit: 90b8b30)
+20:24:36.866 Cloning completed: 595.000ms
+20:24:37.744 Restored build cache from previous deployment (AVPgjWaPtWChLAanDJoe57GbjVsy)
+20:24:38.540 Running "vercel build"
+20:24:38.967 Vercel CLI 50.1.3
+20:24:39.536 Installing dependencies...
+20:24:41.267 
+20:24:41.269 up to date in 2s
+20:24:41.269 
+20:24:41.269 73 packages are looking for funding
+20:24:41.270   run `npm fund` for details
+20:24:41.307 Running "npm run vercel-build"
+20:24:41.409 
+20:24:41.409 > rest-express@1.0.0 vercel-build
+20:24:41.409 > vite build
+20:24:41.409 
+20:24:41.704 [36mvite v7.3.0 [32mbuilding client environment for production...[36m[39m
+20:24:41.774 transforming...
+20:24:42.720 [32m✓[39m 3 modules transformed.
+20:24:42.722 [31m✗[39m Build failed in 986ms
+20:24:42.722 [31merror during build:
+20:24:42.723 [31m[vite:esbuild] Transform failed with 1 error:
+20:24:42.723 /vercel/path0/client/src/App.tsx:128:2: ERROR: Unexpected "}"[31m
+20:24:42.723 file: [36m/vercel/path0/client/src/App.tsx:128:2[31m
+20:24:42.723 [33m
+20:24:42.724 [33mUnexpected "}"[33m
+20:24:42.724 126 |    return <>{children}</>;
+20:24:42.724 127 |  }
+20:24:42.724 128 |    }
+20:24:42.725     |    ^
+20:24:42.725 129 |  
+20:24:42.725 130 |    if (!user) {
+20:24:42.725 [31m
+20:24:42.726     at failureErrorWithLog (/vercel/path0/node_modules/vite/node_modules/esbuild/lib/main.js:1467:15)
+20:24:42.726     at /vercel/path0/node_modules/vite/node_modules/esbuild/lib/main.js:736:50
+20:24:42.726     at responseCallbacks.<computed> (/vercel/path0/node_modules/vite/node_modules/esbuild/lib/main.js:603:9)
+20:24:42.726     at handleIncomingPacket (/vercel/path0/node_modules/vite/node_modules/esbuild/lib/main.js:658:12)
+20:24:42.727     at Socket.readFromStdout (/vercel/path0/node_modules/vite/node_modules/esbuild/lib/main.js:581:7)
+20:24:42.727     at Socket.emit (node:events:508:28)
+20:24:42.727     at addChunk (node:internal/streams/readable:559:12)
+20:24:42.727     at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+20:24:42.727     at Readable.push (node:internal/streams/readable:390:5)
+20:24:42.728     at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)[39m
+20:24:42.769 Error: Command "npm run vercel-build" exited with 1

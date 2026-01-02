@@ -125,11 +125,6 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
-  }
-
-  if (!user) {
-    return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-background p-4 relative overflow-hidden">
         {/* Decorative Background Elements */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/5 via-primary to-primary/5" />
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
