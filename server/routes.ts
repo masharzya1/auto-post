@@ -6,7 +6,7 @@ import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { openai } from "./replit_integrations/image/client";
 import { db } from "./db";
-import { content } from "@shared/schema";
+import { content, workflows } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
@@ -41,6 +41,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post(api.workflows.toggle.path, async (req, res) => {
     const w = await storage.updateWorkflow(Number(req.params.id), req.body.enabled);
     res.json(w);
+  });
+
+  // Update cron schedule
+  app.patch("/api/workflows/:id", async (req, res) => {
+    const { id } = req.params;
+    const { cronSchedule } = req.body;
+    const [updated] = await db.update(workflows).set({ cronSchedule }).where(eq(workflows.id, Number(id))).returning();
+    res.json(updated);
   });
 
   app.get(api.content.list.path, async (req, res) => {
