@@ -1,8 +1,8 @@
 import express, { type Request, Response } from "express";
-import { setupVite, log } from "./vite";
+import { setupVite, log } from "./vite.js";
 import OpenAI from "openai";
 import { Anthropic } from "@anthropic-ai/sdk";
-import { GoogleGenerativeAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import path from "path";
 import { fileURLToPath } from "url";
 
