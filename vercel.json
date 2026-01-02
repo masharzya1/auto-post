@@ -1,15 +1,18 @@
 {
   "version": 2,
-  "crons": [
-    {
-      "path": "/api/cron/generate-content",
-      "schedule": "0 0 * * *"
-    }
-  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
     }
-  ]
+  ],
+  "functions": {
+    "api/generate.ts": {
+      "runtime": "nodejs20.x"
+    }
+  }
 }

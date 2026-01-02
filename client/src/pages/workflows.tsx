@@ -49,8 +49,10 @@ export default function WorkflowsPage() {
 
   useEffect(() => {
     if (!db || !auth?.currentUser) return;
+    console.log("Setting up Firestore listeners for user:", auth.currentUser.uid);
     const qWorkflows = query(collection(db, "workflows"), where("userId", "==", auth.currentUser.uid));
     const unsubscribeWorkflows = onSnapshot(qWorkflows, (snap) => {
+      console.log("Workflows snapshot received, count:", snap.size);
       const data = snap.docs.map(doc => ({ ...doc.data(), id: doc.id }) as any);
       queryClient.setQueryData(["workflows"], data);
     });
