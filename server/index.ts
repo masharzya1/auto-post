@@ -4,7 +4,7 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import cron from "node-cron";
 import { storage } from "./storage";
-import { getOpenAI } from "./replit_integrations/image/client";
+import { getOpenAI } from "./ai_integrations/image/client";
 
 const app = express();
 const httpServer = createServer(app);
@@ -85,7 +85,6 @@ app.use((req, res, next) => {
     {
       port,
       host: "0.0.0.0",
-      reusePort: true,
     },
     () => {
       log(`serving on port ${port}`);
