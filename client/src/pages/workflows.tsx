@@ -30,25 +30,34 @@ export default function WorkflowsPage() {
     }
   });
 
-  const { data: workflows, isLoading } = useQuery<Workflow[]>({ 
+  const { data: workflows, isLoading, error: workflowError } = useQuery<Workflow[]>({ 
     queryKey: ["workflows"],
     queryFn: async () => {
       if (!db || !auth?.currentUser) return [];
+      console.log("Fetching workflows for user:", auth.currentUser.uid);
       const q = query(collection(db, "workflows"), where("userId", "==", auth.currentUser.uid));
       const snap = await getDocs(q);
       return snap.docs.map(doc => ({ ...doc.data(), id: doc.id }) as any);
     }
   });
 
-  const { data: content } = useQuery<Content[]>({ 
+  const { data: content, error: contentError } = useQuery<Content[]>({ 
     queryKey: ["content"],
     queryFn: async () => {
       if (!db || !auth?.currentUser) return [];
+      console.log("Fetching content for user:", auth.currentUser.uid);
       const q = query(collection(db, "content"), where("userId", "==", auth.currentUser.uid));
       const snap = await getDocs(q);
       return snap.docs.map(doc => ({ ...doc.data(), id: doc.id }) as any);
     }
   });
+
+  if (workflowError) {
+    console.error("Workflow query error:", workflowError);
+  }
+  if (contentError) {
+    console.error("Content query error:", contentError);
+  }
 
   const pendingItems = content?.filter(c => c.status === "pending").length || 0;
   const growth = "+12%";
