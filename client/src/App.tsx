@@ -66,10 +66,10 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
             </div>
             <div className="space-y-1.5">
               <CardTitle className="text-4xl font-black tracking-tighter text-foreground">
-                AUTO-CONTENT
+                SPARKPOST AI
               </CardTitle>
               <p className="text-sm font-medium text-muted-foreground tracking-widest uppercase">
-                AI Automation Hub
+                Sparking Social Impact
               </p>
             </div>
           </CardHeader>
@@ -161,7 +161,7 @@ export default function App() {
                 <header className="flex items-center gap-2 p-2 border-b h-14 shrink-0 px-4 bg-background/50 backdrop-blur">
                   <SidebarTrigger data-testid="button-sidebar-toggle" />
                   <div className="h-4 w-[1px] bg-border mx-2" />
-                  <h2 className="text-sm font-semibold tracking-tight truncate">AI Content Automation</h2>
+                  <h2 className="text-sm font-semibold tracking-tight truncate">SparkPost AI Automation</h2>
                 </header>
                 <main className="flex-1 overflow-y-auto bg-slate-50/30 dark:bg-zinc-950/30">
                   <Router />

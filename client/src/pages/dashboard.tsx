@@ -78,53 +78,52 @@ export default function Dashboard() {
 
         <Dialog>
           <DialogTrigger asChild>
-            <Button size="lg" className="gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 font-bold shadow-xl hover:scale-105 transition-all">
+            <Button size="lg" variant="outline" className="gap-2 font-bold shadow-sm hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all border-2 border-black dark:border-white">
               <BookOpen className="h-5 w-5" />
-              Instruction Guide
+              Platform Guide
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl bg-white dark:bg-gray-950 p-0 overflow-hidden border-none shadow-2xl">
-            <div className="h-2 w-full bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500" />
+          <DialogContent className="max-w-3xl bg-white dark:bg-gray-950 p-0 overflow-hidden border-2 border-black dark:border-white shadow-2xl">
             <div className="p-8 space-y-8">
               <DialogHeader>
-                <DialogTitle className="text-3xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-3">
-                  <Rocket className="h-8 w-8 text-blue-600" />
-                  How to use AI Automator
+                <DialogTitle className="text-3xl font-black text-black dark:text-white flex items-center gap-3">
+                  <Rocket className="h-8 w-8" />
+                  SparkPost AI Guide
                 </DialogTitle>
-                <CardDescription className="text-base font-medium">Follow this colorful guide to master your AI content engine.</CardDescription>
+                <CardDescription className="text-base font-medium text-gray-600 dark:text-gray-400">Master your automated content engine with these steps.</CardDescription>
               </DialogHeader>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="p-5 rounded-2xl bg-blue-500/5 border border-blue-500/20 space-y-3">
-                  <div className="h-10 w-10 rounded-xl bg-blue-500 flex items-center justify-center text-white shadow-lg">
+                <div className="p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border-2 border-black dark:border-white space-y-3">
+                  <div className="h-10 w-10 rounded-lg bg-black dark:bg-white flex items-center justify-center text-white dark:text-black shadow-md">
                     <Zap className="h-6 w-6" />
                   </div>
-                  <h3 className="font-bold text-lg">1. Setup Engine</h3>
-                  <p className="text-sm text-muted-foreground">Go to <b>Settings</b> and enter your Facebook Page ID and AI API secrets. This connects your social power.</p>
+                  <h3 className="font-bold text-lg">1. Connect Socials</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Visit <b>Settings</b>. You need your <b>Facebook Page ID</b> (found in Page 'About' -> Page Transparency) and a <b>System Token</b> from Facebook's Developer Portal.</p>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-purple-500/5 border border-purple-500/20 space-y-3">
-                  <div className="h-10 w-10 rounded-xl bg-purple-500 flex items-center justify-center text-white shadow-lg">
+                <div className="p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border-2 border-black dark:border-white space-y-3">
+                  <div className="h-10 w-10 rounded-lg bg-black dark:bg-white flex items-center justify-center text-white dark:text-black shadow-md">
                     <Clock className="h-6 w-6" />
                   </div>
-                  <h3 className="font-bold text-lg">2. Automated Flow</h3>
-                  <p className="text-sm text-muted-foreground">In <b>Workflows</b>, pick a time (like 9 AM) and name your routine. The AI will wake up and create content for you!</p>
+                  <h3 className="font-bold text-lg">2. Define Flow</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">In <b>Workflows</b>, set a daily time. Note: Workflows create <b>Text + Image</b> pairs by default for maximum impact.</p>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-pink-500/5 border border-pink-500/20 space-y-3">
-                  <div className="h-10 w-10 rounded-xl bg-pink-500 flex items-center justify-center text-white shadow-lg">
-                    <Sparkles className="h-6 w-6" />
-                  </div>
-                  <h3 className="font-bold text-lg">3. Creative Control</h3>
-                  <p className="text-sm text-muted-foreground">Visit <b>Content Library</b>. Click "Inspect" to see AI work, and "Deploy" to send it live to your audience instantly.</p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-green-500/5 border border-green-500/20 space-y-3">
-                  <div className="h-10 w-10 rounded-xl bg-green-500 flex items-center justify-center text-white shadow-lg">
+                <div className="p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border-2 border-black dark:border-white space-y-3">
+                  <div className="h-10 w-10 rounded-lg bg-black dark:bg-white flex items-center justify-center text-white dark:text-black shadow-md">
                     <ShieldCheck className="h-6 w-6" />
                   </div>
-                  <h3 className="font-bold text-lg">4. Safe Monitoring</h3>
-                  <p className="text-sm text-muted-foreground">Watch your <b>Dashboard</b> (here!) to track your monthly limits and see recent engagement growth.</p>
+                  <h3 className="font-bold text-lg">3. Facebook Setup</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Ensure your FB App has <code>pages_manage_posts</code> and <code>pages_read_engagement</code> permissions for automatic posting to work.</p>
+                </div>
+
+                <div className="p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border-2 border-black dark:border-white space-y-3">
+                  <div className="h-10 w-10 rounded-lg bg-black dark:bg-white flex items-center justify-center text-white dark:text-black shadow-md">
+                    <Rocket className="h-6 w-6" />
+                  </div>
+                  <h3 className="font-bold text-lg">4. Deployment</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">When deploying to Vercel, add <code>DATABASE_URL</code> and your <code>FIREBASE_</code> secrets to the Vercel Dashboard environment variables.</p>
                 </div>
               </div>
             </div>

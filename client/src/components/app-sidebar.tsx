@@ -17,7 +17,7 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <h1 className="text-xl font-bold">AI Automator</h1>
+        <h1 className="text-xl font-bold">SparkPost AI</h1>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

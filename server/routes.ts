@@ -73,6 +73,36 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.sendStatus(204);
   });
 
+  app.post("/api/workflows/:id/trigger", async (req, res) => {
+    const { id } = req.params;
+    const s = await storage.getSettings();
+    const l = await storage.getLimits();
+
+    try {
+      // Logic for workflow: Always creates a text + image pair for impact
+      const textData = { text: `AI Generated Caption for ${s?.niche || 'Universal'} niche. #sparkpost #automation` };
+      const imageData = { url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe", prompt: "SparkPost AI visual" };
+      
+      await storage.updateLimits({ 
+        textUsed: (l?.textUsed || 0) + 1,
+        imageUsed: (l?.imageUsed || 0) + 1 
+      });
+
+      const contentItems = [
+        { type: "text", workflowId: Number(id), data: textData, status: "ready" },
+        { type: "image", workflowId: Number(id), data: imageData, status: "ready" }
+      ];
+
+      const created = await Promise.all(contentItems.map(item => storage.createContent(item)));
+      
+      await db.update(workflows).set({ lastRun: new Date() }).where(eq(workflows.id, Number(id)));
+
+      res.json(created);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.post(api.content.generate.path, async (req, res) => {
     const { type } = req.body;
     const s = await storage.getSettings();

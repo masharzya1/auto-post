@@ -21,10 +21,26 @@ export default function WorkflowsPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [cronValue, setCronValue] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isTriggering, setIsTriggering] = useState<number | null>(null);
 
   const pendingItems = content?.filter(c => c.status === "pending").length || 0;
   const totalItems = content?.length || 0;
-  const growth = totalItems > 0 ? "+24%" : "0%";
+  const readyItems = content?.filter(c => c.status === "ready").length || 0;
+  const growthRate = totalItems > 0 ? ((readyItems / totalItems) * 100).toFixed(0) : "0";
+  const growth = totalItems > 0 ? `+${growthRate}%` : "0%";
+
+  const triggerMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("POST", `/api/workflows/${id}/trigger`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/content"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/workflows"] });
+      toast({ title: "Success", description: "Workflow executed! Check your library." });
+    },
+    onSettled: () => setIsTriggering(null)
+  });
 
   const createForm = useForm({
     resolver: zodResolver(insertWorkflowSchema),
@@ -258,12 +274,13 @@ export default function WorkflowsPage() {
                   variant="secondary" 
                   size="sm" 
                   className="flex-1 gap-2 h-9 font-bold"
+                  disabled={isTriggering === workflow.id}
                   onClick={() => {
-                    toast({ title: "Manual Trigger", description: `Starting execution for ${workflow.name}...` });
-                    // Ideally call a trigger API here if one exists
+                    setIsTriggering(workflow.id);
+                    triggerMutation.mutate(workflow.id);
                   }}
                 >
-                  <Play className="h-3.5 w-3.5" />
+                  {isTriggering === workflow.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
                   Run Now
                 </Button>
               </div>
