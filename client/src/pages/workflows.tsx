@@ -184,13 +184,32 @@ export default function WorkflowsPage() {
                     <option value="image_text">Image + Text</option>
                   </select>
                 </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Niche (Override)</Label>
+                  <select 
+                    className="flex h-10 w-full rounded-md border border-muted-foreground/20 bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus:bg-background transition-colors"
+                    {...createForm.register("niche")}
+                  >
+                    <option value="">Use Global Niche</option>
+                    <option value="Motivation">Motivation</option>
+                    <option value="Tech">Tech</option>
+                    <option value="Health">Health</option>
+                    <option value="Finance">Finance</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Runs Per Day</Label>
+                  <Input type="number" {...createForm.register("runsPerDay", { valueAsNumber: true })} min={1} max={10} className="h-10 bg-white" />
+                </div>
                 <div className="flex items-center space-x-2 pt-8">
                   <Switch 
                     id="hashtags"
                     checked={createForm.watch("includeHashtags")}
                     onCheckedChange={(checked) => createForm.setValue("includeHashtags", checked)}
                   />
-                  <Label htmlFor="hashtags" className="text-sm font-semibold">Relevant Hashtags</Label>
+                  <Label htmlFor="hashtags" className="text-sm font-semibold">Hashtags</Label>
                 </div>
               </div>
               <div className="space-y-2">
@@ -284,6 +303,10 @@ export default function WorkflowsPage() {
               />
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Frequency:</span>
+                <span className="font-bold text-primary">{workflow.runsPerDay}x Daily</span>
+              </div>
               <div className="p-3 rounded-lg bg-muted/50 border border-dashed border-border/50">
                 <Label className="text-[10px] uppercase tracking-widest font-black text-muted-foreground mb-1 block">
                   Automated Schedule

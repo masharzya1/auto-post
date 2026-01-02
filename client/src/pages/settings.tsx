@@ -107,6 +107,24 @@ export default function SettingsPage() {
             <CardDescription>Select high-performance models for your content generation.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-8">
+            <div className="space-y-3">
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Global Niche / Topic</Label>
+              <Select value={form.watch("niche")} onValueChange={(v) => form.setValue("niche", v)}>
+                <SelectTrigger className="h-11 bg-white">
+                  <SelectValue placeholder="Select Niche" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="Motivation">Motivation & Success</SelectItem>
+                  <SelectItem value="Tech">Technology & AI</SelectItem>
+                  <SelectItem value="Health">Health & Fitness</SelectItem>
+                  <SelectItem value="Finance">Personal Finance</SelectItem>
+                  <SelectItem value="Travel">Travel & Adventure</SelectItem>
+                  <SelectItem value="Food">Food & Cooking</SelectItem>
+                  <SelectItem value="Gaming">Gaming & eSports</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid gap-6 md:grid-cols-3">
               <div className="space-y-3">
                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Photo Generation</Label>
