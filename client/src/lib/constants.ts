@@ -7,7 +7,9 @@ export const MODELS = {
   caption: [
     { id: "gpt-4o-mini", name: "GPT-4o Mini", tier: "Standard" },
     { id: "gpt-4o", name: "GPT-4o", tier: "Pro" },
-    { id: "claude-3-5-sonnet", name: "Claude 3.5 Sonnet", tier: "Pro" }
+    { id: "claude-3-5-sonnet", name: "Claude 3.5 Sonnet", tier: "Pro" },
+    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash", tier: "Standard" },
+    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro", tier: "Pro" }
   ],
   videos: [
     { id: "luma-dream-machine", name: "Luma Dream Machine", tier: "Pro" },

@@ -26,7 +26,9 @@ export default function WorkflowsPage() {
       contentType: "text",
       includeHashtags: true,
       cronSchedule: "0 9 * * *",
-      enabled: true
+      enabled: true,
+      runsPerDay: 1,
+      niche: ""
     }
   });
 
@@ -102,6 +104,8 @@ export default function WorkflowsPage() {
         ...data,
         userId: auth.currentUser.uid,
         status: "idle",
+        niche: data.niche || null,
+        runsPerDay: data.runsPerDay || 1,
         createdAt: new Date().toISOString()
       });
       return { ...data, id: docRef.id };

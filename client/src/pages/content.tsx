@@ -73,6 +73,12 @@ export default function ContentPage() {
                     settings?.geminiApiKey
           })
         });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Generation failed");
+        }
+
         const result = await response.json();
         data = { text: result.text, hashtags: result.hashtags };
       } else {
@@ -87,6 +93,12 @@ export default function ContentPage() {
             apiKey: settings?.openaiApiKey // Assuming DALL-E/GPT-image-1
           })
         });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Generation failed");
+        }
+
         const result = await response.json();
         data = { url: result.url, prompt: result.prompt };
       }

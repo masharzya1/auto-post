@@ -48,29 +48,34 @@ app.use((req, res, next) => {
   app.post("/api/content/generate", async (req, res) => {
     const { type, niche, model, apiKey } = req.body;
     
+    if (!apiKey) {
+      return res.status(400).json({ error: "API Key is required for this model." });
+    }
+
     try {
       if (type === "text") {
         let generatedText = "";
+        const prompt = `Write a high-quality social media caption about ${niche}. Include relevant hashtags. Make it engaging and professional.`;
         
-        if (model.includes("gpt") && apiKey) {
+        if (model.includes("gpt")) {
           const openai = new OpenAI({ apiKey });
           const response = await openai.chat.completions.create({
             model: model,
-            messages: [{ role: "user", content: `Write a high-quality social media caption about ${niche}. Include relevant hashtags.` }],
+            messages: [{ role: "user", content: prompt }],
           });
           generatedText = response.choices[0]?.message?.content || "";
-        } else if (model.includes("claude") && apiKey) {
+        } else if (model.includes("claude")) {
           const anthropic = new Anthropic({ apiKey });
           const response = await anthropic.messages.create({
             model: model,
             max_tokens: 1024,
-            messages: [{ role: "user", content: `Write a high-quality social media caption about ${niche}. Include relevant hashtags.` }],
+            messages: [{ role: "user", content: prompt }],
           });
           generatedText = response.content[0].type === 'text' ? response.content[0].text : "";
-        } else if (apiKey) {
+        } else if (model.includes("gemini")) {
           const genAI = new GoogleGenerativeAI(apiKey);
-          const genModel = genAI.getGenerativeModel({ model: "gemini-pro" });
-          const result = await genModel.generateContent(`Write a high-quality social media caption about ${niche}. Include relevant hashtags.`);
+          const genModel = genAI.getGenerativeModel({ model: model.includes("pro") ? "gemini-1.5-pro" : "gemini-1.5-flash" });
+          const result = await genModel.generateContent(prompt);
           generatedText = result.response.text();
         }
 
@@ -85,15 +90,22 @@ app.use((req, res, next) => {
       } else {
         // For images, we'll use OpenAI DALL-E if apiKey is provided
         let imageUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe";
-        if (model.includes("gpt") && apiKey) {
+        if (model.includes("gpt")) {
            const openai = new OpenAI({ apiKey });
            const response = await openai.images.generate({
              model: "dall-e-3",
-             prompt: `${niche} themed high-quality professional photography/artwork`,
+             prompt: `${niche} themed high-quality professional photography, cinematic lighting, ultra-detailed, 8k resolution`,
              n: 1,
              size: "1024x1024",
            });
            imageUrl = response.data[0].url || imageUrl;
+        } else {
+           // Fallback or other models could be added here
+           res.json({
+             url: imageUrl,
+             prompt: `${niche} themed artwork (Fallback: Unsplash)`
+           });
+           return;
         }
         
         res.json({
