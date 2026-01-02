@@ -3,28 +3,94 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
+import { useAuth } from "@/hooks/use-auth";
+import { loginWithGoogle } from "@/lib/firebase";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+
+import Dashboard from "@/pages/dashboard";
+import SettingsPage from "@/pages/settings";
+import WorkflowsPage from "@/pages/workflows";
+import ContentPage from "@/pages/content";
 import NotFound from "@/pages/not-found";
+
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center">AI Content Automator</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <p className="text-center text-muted-foreground">
+              Sign in to manage your AI workflows and automate your social media content.
+            </p>
+            <Button onClick={loginWithGoogle} className="w-full" size="lg" data-testid="button-login">
+              Sign in with Google
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
 
 function Router() {
   return (
     <Switch>
-      {/* Add pages below */}
-      {/* <Route path="/" component={Home}/> */}
-      {/* Fallback to 404 */}
+      <Route path="/" component={Dashboard} />
+      <Route path="/settings" component={SettingsPage} />
+      <Route path="/workflows" component={WorkflowsPage} />
+      <Route path="/content" component={ContentPage} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-function App() {
+export default function App() {
+  const style = {
+    "--sidebar-width": "16rem",
+    "--sidebar-width-icon": "4rem",
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <AuthGuard>
+          <SidebarProvider style={style as React.CSSProperties}>
+            <div className="flex h-screen w-full overflow-hidden">
+              <AppSidebar />
+              <div className="flex flex-col flex-1 min-w-0">
+                <header className="flex items-center gap-2 p-2 border-b h-14 shrink-0">
+                  <SidebarTrigger data-testid="button-sidebar-toggle" />
+                  <div className="h-4 w-[1px] bg-border mx-2" />
+                  <h2 className="text-sm font-medium truncate">AI Content Automation</h2>
+                </header>
+                <main className="flex-1 overflow-y-auto">
+                  <Router />
+                </main>
+              </div>
+            </div>
+          </SidebarProvider>
+        </AuthGuard>
         <Toaster />
-        <Router />
       </TooltipProvider>
     </QueryClientProvider>
   );
 }
-
-export default App;
