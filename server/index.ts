@@ -5,6 +5,7 @@ import { createServer } from "http";
 import cron from "node-cron";
 import { storage } from "./storage";
 import { getOpenAI } from "./ai_integrations/image/client";
+import "./firebase"; // Initialize Firebase
 
 const app = express();
 const httpServer = createServer(app);

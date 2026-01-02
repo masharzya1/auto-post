@@ -1,6 +1,5 @@
-import { db } from "./db";
-import { settings, limits, workflows, content, type Settings, type Limits, type Workflow, type Content } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { adminDb } from "./firebase";
+import { type Settings, type Limits, type Workflow, type Content } from "@shared/schema";
 
 export interface IStorage {
   getSettings(): Promise<Settings | undefined>;
@@ -14,60 +13,97 @@ export interface IStorage {
   deleteContent(id: number): Promise<void>;
 }
 
-export class DatabaseStorage implements IStorage {
+export class FirebaseStorage implements IStorage {
+  private settingsCol = adminDb.collection("settings");
+  private limitsCol = adminDb.collection("limits");
+  private workflowsCol = adminDb.collection("workflows");
+  private contentCol = adminDb.collection("content");
+
   async getSettings() {
-    const [s] = await db.select().from(settings);
-    return s;
+    const snapshot = await this.settingsCol.limit(1).get();
+    if (snapshot.empty) return undefined;
+    return snapshot.docs[0].data() as Settings;
   }
+
   async updateSettings(data: any) {
     const existing = await this.getSettings();
     if (existing) {
-      const [updated] = await db.update(settings).set(data).where(eq(settings.id, existing.id)).returning();
-      return updated;
+      const snapshot = await this.settingsCol.limit(1).get();
+      const doc = snapshot.docs[0];
+      await doc.ref.update(data);
+      return { ...doc.data(), ...data } as Settings;
     }
-    const [created] = await db.insert(settings).values(data).returning();
-    return created;
+    const docRef = await this.settingsCol.add({ ...data, id: 1 });
+    const doc = await docRef.get();
+    return doc.data() as Settings;
   }
+
   async getLimits() {
-    const [l] = await db.select().from(limits);
-    if (!l) {
-      // Create default limits if none exist
-      const [created] = await db.insert(limits).values({
+    const snapshot = await this.limitsCol.limit(1).get();
+    if (snapshot.empty) {
+      const defaultLimits = {
+        id: 1,
         textLimit: 100,
         imageLimit: 50,
         videoLimit: 10,
         textUsed: 0,
         imageUsed: 0,
         videoUsed: 0,
-        lastResetDate: new Date()
-      }).returning();
-      return created;
+        lastResetDate: new Date().toISOString()
+      };
+      await this.limitsCol.add(defaultLimits);
+      return defaultLimits as unknown as Limits;
     }
-    return l;
+    const data = snapshot.docs[0].data();
+    return {
+      ...data,
+      lastResetDate: new Date(data.lastResetDate)
+    } as Limits;
   }
+
   async updateLimits(data: any) {
-    const existing = await this.getLimits();
-    // existing is guaranteed to be defined because getLimits creates it if missing
-    const [updated] = await db.update(limits).set(data).where(eq(limits.id, existing!.id)).returning();
-    return updated;
+    const snapshot = await this.limitsCol.limit(1).get();
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      await doc.ref.update(data);
+      return { ...doc.data(), ...data } as Limits;
+    }
+    return this.getLimits();
   }
+
   async getWorkflows() {
-    return await db.select().from(workflows);
+    const snapshot = await this.workflowsCol.get();
+    return snapshot.docs.map(doc => doc.data() as Workflow);
   }
+
   async updateWorkflow(id: number, enabled: boolean) {
-    const [updated] = await db.update(workflows).set({ enabled }).where(eq(workflows.id, id)).returning();
-    return updated;
+    const snapshot = await this.workflowsCol.where("id", "==", id).limit(1).get();
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      await doc.ref.update({ enabled });
+      return { ...doc.data(), enabled } as Workflow;
+    }
+    throw new Error("Workflow not found");
   }
+
   async getContent() {
-    return await db.select().from(content);
+    const snapshot = await this.contentCol.get();
+    return snapshot.docs.map(doc => doc.data() as Content);
   }
+
   async createContent(data: any) {
-    const [created] = await db.insert(content).values(data).returning();
-    return created;
+    const id = Date.now();
+    const docRef = await this.contentCol.add({ ...data, id });
+    const doc = await docRef.get();
+    return doc.data() as Content;
   }
+
   async deleteContent(id: number) {
-    await db.delete(content).where(eq(content.id, id));
+    const snapshot = await this.contentCol.where("id", "==", id).limit(1).get();
+    if (!snapshot.empty) {
+      await snapshot.docs[0].ref.delete();
+    }
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new FirebaseStorage();
