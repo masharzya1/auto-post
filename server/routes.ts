@@ -5,6 +5,9 @@ import { api } from "@shared/routes";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { openai } from "./replit_integrations/image/client";
+import { db } from "./db";
+import { content } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   registerChatRoutes(app);
@@ -111,7 +114,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           model: "gpt-image-1",
           prompt: `A professional image for a social media post in the ${niche} niche.`,
         });
-        generatedData = { url: response.data[0].url, prompt: response.data[0].revised_prompt };
+        generatedData = { 
+          url: response.data?.[0]?.url, 
+          prompt: response.data?.[0]?.revised_prompt 
+        };
       }
 
       const c = await storage.createContent({ 
