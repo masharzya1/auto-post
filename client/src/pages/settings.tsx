@@ -4,12 +4,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSettingsSchema, type Settings } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Key, Cpu, AlertCircle } from "lucide-react";
+
+const MODELS = {
+  photos: [
+    { id: "gpt-image-1", name: "DALL-E 3 (OpenAI)", provider: "openai", canGen: true },
+    { id: "stable-diffusion", name: "Stable Diffusion", provider: "custom", canGen: true },
+    { id: "midjourney", name: "Midjourney", provider: "custom", canGen: false },
+  ],
+  caption: [
+    { id: "gpt-5", name: "GPT-5 (OpenAI)", provider: "openai", canGen: true },
+    { id: "claude-3-5-sonnet", name: "Claude 3.5 Sonnet", provider: "anthropic", canGen: true },
+    { id: "gemini-1-5-pro", name: "Gemini 1.5 Pro", provider: "google", canGen: true },
+  ],
+  videos: [
+    { id: "sora", name: "Sora (OpenAI)", provider: "openai", canGen: false },
+    { id: "runway-gen-2", name: "Runway Gen-2", provider: "runway", canGen: false },
+    { id: "next-gen-video", name: "Next-Gen (Upcoming)", provider: "internal", canGen: false },
+  ]
+};
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -24,6 +43,13 @@ export default function SettingsPage() {
       postsPerWeek: 7,
       videosPerDay: 1,
       randomPostingTime: false,
+      photoModel: "gpt-image-1",
+      captionModel: "gpt-5",
+      videoModel: "next-gen-video",
+      fbAccessToken: "",
+      openaiApiKey: "",
+      geminiApiKey: "",
+      claudeApiKey: "",
     },
   });
 
@@ -34,7 +60,7 @@ export default function SettingsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
-      toast({ title: "Settings saved", description: "Your configuration has been updated." });
+      toast({ title: "Settings saved", description: "Your configuration and API keys have been updated." });
     },
   });
 
@@ -46,6 +72,10 @@ export default function SettingsPage() {
     );
   }
 
+  const selectedPhotoModel = MODELS.photos.find(m => m.id === form.watch("photoModel"));
+  const selectedCaptionModel = MODELS.caption.find(m => m.id === form.watch("captionModel"));
+  const selectedVideoModel = MODELS.videos.find(m => m.id === form.watch("videoModel"));
+
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
@@ -55,57 +85,121 @@ export default function SettingsPage() {
       <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Platform Connections</CardTitle>
-            <CardDescription>Configure your social media account IDs for automated posting.</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <Cpu className="h-5 w-5 text-primary" />
+              Model Selection
+            </CardTitle>
+            <CardDescription>Choose the AI models for each content segment.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="fbPageId">Facebook Page ID</Label>
-              <Input id="fbPageId" {...form.register("fbPageId")} placeholder="Enter your FB Page ID" />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="ytChannelId">YouTube Channel ID</Label>
-              <Input id="ytChannelId" {...form.register("ytChannelId")} placeholder="Enter your YT Channel ID" />
+          <CardContent className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Photo Model</Label>
+                <Select value={form.watch("photoModel")} onValueChange={(v) => form.setValue("photoModel", v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MODELS.photos.map(m => (
+                      <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedPhotoModel && !selectedPhotoModel.canGen && (
+                  <p className="text-[10px] text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> Not currently available
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Caption Model</Label>
+                <Select value={form.watch("captionModel")} onValueChange={(v) => form.setValue("captionModel", v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MODELS.caption.map(m => (
+                      <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedCaptionModel && !selectedCaptionModel.canGen && (
+                  <p className="text-[10px] text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> Not currently available
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Video Model</Label>
+                <Select value={form.watch("videoModel")} onValueChange={(v) => form.setValue("videoModel", v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MODELS.videos.map(m => (
+                      <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground italic">
+                  This feature will come next
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Automation Preferences</CardTitle>
-            <CardDescription>Set your content schedule and niche.</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5 text-primary" />
+              API Key Management
+            </CardTitle>
+            <CardDescription>Configure external provider keys.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-2">
+                <Label>OpenAI API Key</Label>
+                <Input type="password" {...form.register("openaiApiKey")} placeholder="sk-..." />
+              </div>
+              <div className="grid gap-2">
+                <Label>Claude API Key</Label>
+                <Input type="password" {...form.register("claudeApiKey")} placeholder="key-..." />
+              </div>
+              <div className="grid gap-2">
+                <Label>Gemini API Key</Label>
+                <Input type="password" {...form.register("geminiApiKey")} placeholder="key-..." />
+              </div>
+              <div className="grid gap-2">
+                <Label>Facebook Access Token</Label>
+                <Input type="password" {...form.register("fbAccessToken")} placeholder="EAAB..." />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Platform Connections</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-2">
-              <Label htmlFor="niche">Content Niche</Label>
-              <Input id="niche" {...form.register("niche")} placeholder="e.g. Health, Tech, Motivation" />
+              <Label>Facebook Page ID</Label>
+              <Input {...form.register("fbPageId")} placeholder="Page ID" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="postsPerWeek">Posts Per Week</Label>
-                <Input type="number" id="postsPerWeek" {...form.register("postsPerWeek", { valueAsNumber: true })} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="videosPerDay">Videos Per Day</Label>
-                <Input type="number" id="videosPerDay" {...form.register("videosPerDay", { valueAsNumber: true })} />
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-2 rounded-lg border">
-              <div className="space-y-0.5">
-                <Label>Random Posting Time</Label>
-                <p className="text-sm text-muted-foreground">Post at unpredictable times to mimic human behavior.</p>
-              </div>
-              <Switch 
-                checked={form.watch("randomPostingTime")} 
-                onCheckedChange={(val) => form.setValue("randomPostingTime", val)} 
-              />
+            <div className="grid gap-2">
+              <Label>YouTube Channel ID (API Disabled)</Label>
+              <Input disabled placeholder="YouTube API is currently disabled" />
             </div>
           </CardContent>
         </Card>
 
         <Button type="submit" className="w-full" disabled={mutation.isPending}>
           {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          Save Configuration
+          Save All Settings
         </Button>
       </form>
     </div>

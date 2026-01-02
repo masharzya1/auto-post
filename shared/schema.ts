@@ -11,6 +11,17 @@ export const settings = pgTable("settings", {
   postsPerWeek: integer("posts_per_week").notNull(),
   videosPerDay: integer("videos_per_day").notNull(),
   randomPostingTime: boolean("random_posting_time").default(false).notNull(),
+  
+  // Model Selections
+  photoModel: text("photo_model").default("gpt-image-1").notNull(),
+  captionModel: text("caption_model").default("gpt-5").notNull(),
+  videoModel: text("video_model").default("next-gen-video").notNull(),
+  
+  // API Keys (Stored as encrypted strings or handled via Secrets in Replit)
+  fbAccessToken: text("fb_access_token"),
+  openaiApiKey: text("openai_api_key"),
+  geminiApiKey: text("gemini_api_key"),
+  claudeApiKey: text("claude_api_key"),
 });
 
 // AI Usage Limits
@@ -32,6 +43,7 @@ export const workflows = pgTable("workflows", {
   enabled: boolean("enabled").default(true).notNull(),
   lastRun: timestamp("last_run"),
   status: text("status").default("idle").notNull(),
+  cronSchedule: text("cron_schedule").default("0 9 * * *").notNull(), // Default 9 AM daily
 });
 
 // Generated Content

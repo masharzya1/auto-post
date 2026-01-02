@@ -31,6 +31,23 @@ export default function ContentPage() {
     },
   });
 
+  const postMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("POST", `/api/content/${id}/post`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Posted successfully!", description: "Content shared to Facebook." });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Posting failed", 
+        description: error.message || "Check your Facebook settings.",
+        variant: "destructive"
+      });
+    }
+  });
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -97,7 +114,7 @@ export default function ContentPage() {
                   <img src={(item.data as any).url} alt="Generated" className="absolute inset-0 w-full h-full object-cover" />
                 ) : (
                   <div className="p-4">
-                    <p className="line-clamp-3">{(item.data as any).prompt || (item.data as any).text || "No preview available"}</p>
+                    <p className="line-clamp-3">{(item.data as any).text || (item.data as any).prompt || "No preview available"}</p>
                   </div>
                 )}
               </div>
@@ -106,8 +123,14 @@ export default function ContentPage() {
                   <Eye className="h-3 w-3" />
                   View
                 </Button>
-                <Button variant="primary" size="sm" className="flex-1 gap-1" disabled={item.status !== "ready"}>
-                  <Send className="h-3 w-3" />
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="flex-1 gap-1" 
+                  disabled={item.status !== "ready" || postMutation.isPending}
+                  onClick={() => postMutation.mutate(item.id)}
+                >
+                  {postMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
                   Post
                 </Button>
               </div>
