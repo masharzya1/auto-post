@@ -48,6 +48,8 @@ export default function WorkflowsPage() {
       name: "",
       enabled: true,
       cronSchedule: "0 9 * * *",
+      contentType: "text",
+      includeHashtags: true,
     }
   });
 
@@ -118,12 +120,34 @@ export default function WorkflowsPage() {
             <form onSubmit={createForm.handleSubmit((data) => createMutation.mutate(data))} className="space-y-6 pt-6">
               <div className="space-y-2">
                 <Label className="text-sm font-semibold">Workflow Name</Label>
-                <Input {...createForm.register("name")} placeholder="e.g. Daily Motivation Posts" className="bg-muted/30 border-muted-foreground/20 focus:bg-background transition-colors" />
+                <Input {...createForm.register("name")} placeholder="e.g. Daily Motivation Posts" className="bg-white border-muted-foreground/20 focus:bg-background transition-colors" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Content Type</Label>
+                  <select 
+                    className="flex h-10 w-full rounded-md border border-muted-foreground/20 bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus:bg-background transition-colors"
+                    {...createForm.register("contentType")}
+                  >
+                    <option value="text">Text Only</option>
+                    <option value="image">Image Only</option>
+                    <option value="video">Video (Coming Soon)</option>
+                    <option value="image_text">Image + Text</option>
+                  </select>
+                </div>
+                <div className="flex items-center space-x-2 pt-8">
+                  <Switch 
+                    id="hashtags"
+                    checked={createForm.watch("includeHashtags")}
+                    onCheckedChange={(checked) => createForm.setValue("includeHashtags", checked)}
+                  />
+                  <Label htmlFor="hashtags" className="text-sm font-semibold">Relevant Hashtags</Label>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label className="text-sm font-semibold">Schedule (Posting Time)</Label>
                 <select 
-                  className="flex h-10 w-full rounded-md border border-muted-foreground/20 bg-muted/30 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 focus:bg-background transition-colors"
+                  className="flex h-10 w-full rounded-md border border-muted-foreground/20 bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus:bg-background transition-colors"
                   {...createForm.register("cronSchedule")}
                 >
                   <option value="0 9 * * *">Every day at 9:00 AM</option>
