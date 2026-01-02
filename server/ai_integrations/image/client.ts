@@ -1,4 +1,5 @@
-import OpenAI from "openai";
+import fs from "node:fs";
+import OpenAI, { toFile } from "openai";
 import { storage } from "../../storage";
 
 export async function getOpenAIInstance(): Promise<OpenAI> {
