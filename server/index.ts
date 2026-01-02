@@ -81,7 +81,13 @@ app.post("/api/content/generate", async (req: Request, res: Response) => {
 });
 
 // Vercel deployment support
-if (process.env.NODE_ENV === "production") {
+if (process.env.VERCEL) {
+  const distPath = path.join(process.cwd(), "dist");
+  app.use(express.static(distPath));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+} else if (process.env.NODE_ENV === "production") {
   // Use "dist" instead of "dist/public" as per vite build output
   const distPath = path.join(__dirname, "..", "dist");
   app.use(express.static(distPath));
