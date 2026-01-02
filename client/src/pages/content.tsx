@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { type Content } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, FileText, Image as ImageIcon, Video, Eye, Send, Trash2, Sparkles, Edit2, Save } from "lucide-react";
+import { Loader2, Plus, FileText, Image as ImageIcon, Video, Eye, Send, Trash2, Sparkles, Edit2, Save, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,7 @@ import { db, auth } from "@/lib/firebase";
 import { collection, getDocs, query, where, addDoc, deleteDoc, doc, updateDoc, getDoc, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { type Settings } from "@shared/schema";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function ContentPage() {
   const { toast } = useToast();
@@ -51,25 +52,46 @@ export default function ContentPage() {
     }
   });
 
+  // Check if user has necessary API keys configured
+  const hasOpenAIKey = settings?.openaiApiKey && settings.openaiApiKey.length > 0;
+  const hasClaudeKey = settings?.claudeApiKey && settings.claudeApiKey.length > 0;
+  const hasGeminiKey = settings?.geminiApiKey && settings.geminiApiKey.length > 0;
+  const hasAnyKey = hasOpenAIKey || hasClaudeKey || hasGeminiKey;
+
   const generateMutation = useMutation({
     mutationFn: async (type: string) => {
       if (!db || !auth?.currentUser) throw new Error("Not authenticated");
       
       const niche = settings?.niche || "General";
-      const model = type === "text" ? settings?.captionModel : settings?.photoModel;
       
-      if (!model) throw new Error("No model selected in settings");
+      // Determine which model and provider to use
+      let model, provider, apiKey;
+      
+      if (type === "text") {
+        model = settings?.captionModel || "gpt-4o-mini";
+        // Determine provider from model name
+        if (model.includes("gpt")) {
+          provider = "openai";
+          apiKey = settings?.openaiApiKey;
+        } else if (model.includes("claude")) {
+          provider = "anthropic";
+          apiKey = settings?.claudeApiKey;
+        } else if (model.includes("gemini")) {
+          provider = "google";
+          apiKey = settings?.geminiApiKey;
+        }
+      } else if (type === "image") {
+        model = settings?.photoModel || "gpt-image-1";
+        provider = "openai"; // Images only support OpenAI for now
+        apiKey = settings?.openaiApiKey;
+      }
 
-      const apiKey = model.includes("gpt") ? settings?.openaiApiKey : 
-                    model.includes("claude") ? settings?.claudeApiKey : 
-                    settings?.geminiApiKey;
+      // Validate API key exists
+      if (!apiKey || apiKey.trim().length === 0) {
+        throw new Error(`${provider?.toUpperCase()} API Key is required. Please add it in Settings.`);
+      }
 
-      if (!apiKey) throw new Error("API Key required for " + model);
-
-      let data;
-      const provider = model.includes("gpt") ? "openai" : 
-                       model.includes("claude") ? "anthropic" : "google";
-
+      // Try to generate content
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,11 +100,20 @@ export default function ContentPage() {
 
       if (!response.ok) {
         const error = await response.json();
+        
+        // More helpful error messages
+        if (error.error?.includes("quota") || error.error?.includes("429")) {
+          throw new Error(`Your ${provider?.toUpperCase()} API key has no credits. Please add credits to your account or try a different provider.`);
+        } else if (error.error?.includes("401") || error.error?.includes("invalid")) {
+          throw new Error(`Invalid ${provider?.toUpperCase()} API key. Please check your key in Settings.`);
+        }
+        
         throw new Error(error.error || "Generation failed");
       }
 
-      data = await response.json();
+      const data = await response.json();
       
+      // Save to Firebase
       const docRef = await addDoc(collection(db, "content"), {
         type,
         userId: auth.currentUser.uid,
@@ -90,12 +121,24 @@ export default function ContentPage() {
         status: "ready",
         createdAt: new Date().toISOString()
       });
+      
       return { id: docRef.id, type };
     },
     onSuccess: (newItem) => {
       queryClient.invalidateQueries({ queryKey: ["content"] });
-      toast({ title: "Content Created!", description: `Generated using ${settings?.niche} niche.` });
+      toast({ 
+        title: "✨ Content Created!", 
+        description: `Generated using ${settings?.niche || "General"} niche.` 
+      });
     },
+    onError: (error: any) => {
+      console.error("Generation error:", error);
+      toast({ 
+        title: "❌ Generation Failed", 
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   const updateMutation = useMutation({
@@ -110,7 +153,7 @@ export default function ContentPage() {
     onSuccess: () => {
       setEditingId(null);
       queryClient.invalidateQueries({ queryKey: ["content"] });
-      toast({ title: "Content updated!" });
+      toast({ title: "✏️ Content updated!" });
     },
   });
 
@@ -118,13 +161,11 @@ export default function ContentPage() {
     mutationFn: async (id: string) => {
       if (!db || !auth?.currentUser) throw new Error("Not authenticated");
       
-      // Get content
       const contentDoc = await getDoc(doc(db, "content", id));
       const contentData = contentDoc.data();
       
       if (!contentData) throw new Error("Content not found");
       
-      // Get settings for FB credentials
       const settingsDoc = await getDoc(doc(db, "settings", auth.currentUser.uid));
       const settingsData = settingsDoc.data();
       
@@ -132,7 +173,6 @@ export default function ContentPage() {
         throw new Error("Facebook Page ID and Access Token required in Settings");
       }
 
-      // Post to Facebook
       const response = await fetch("/api/facebook-post", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -151,8 +191,6 @@ export default function ContentPage() {
       }
 
       const result = await response.json();
-      
-      // Update status
       await updateDoc(doc(db, "content", id), { status: "deployed" });
       
       return result;
@@ -160,7 +198,7 @@ export default function ContentPage() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["content"] });
       toast({ 
-        title: "Posted to Facebook!", 
+        title: "🚀 Posted to Facebook!", 
         description: `Post ID: ${result.postId}` 
       });
     },
@@ -202,7 +240,7 @@ export default function ContentPage() {
             variant="outline" 
             className="h-11 px-6 hover-elevate transition-all border-primary/20 bg-primary/5 text-primary font-bold"
             onClick={() => generateMutation.mutate("text")} 
-            disabled={generateMutation.isPending}
+            disabled={generateMutation.isPending || !hasAnyKey}
           >
             {generateMutation.isPending && generateMutation.variables === "text" ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -214,7 +252,7 @@ export default function ContentPage() {
           <Button 
             className="h-11 px-6 hover-elevate shadow-lg font-bold"
             onClick={() => generateMutation.mutate("image")} 
-            disabled={generateMutation.isPending}
+            disabled={generateMutation.isPending || !hasOpenAIKey}
           >
             {generateMutation.isPending && generateMutation.variables === "image" ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -225,6 +263,36 @@ export default function ContentPage() {
           </Button>
         </div>
       </div>
+
+      {/* Warning Alert if no API keys configured */}
+      {!hasAnyKey && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>⚠️ API Keys Required</AlertTitle>
+          <AlertDescription>
+            Please add at least one AI provider API key in <a href="/settings" className="underline font-bold">Settings</a> to generate content.
+            <br />
+            <span className="text-xs mt-1 block">
+              • OpenAI: For images and captions (DALL-E, GPT-4)
+              <br />
+              • Claude: For captions (Claude models)
+              <br />
+              • Gemini: For captions (Google models)
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Info Alert for Image Generation */}
+      {hasAnyKey && !hasOpenAIKey && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>ℹ️ Image Generation Unavailable</AlertTitle>
+          <AlertDescription>
+            Image generation requires an OpenAI API key with credits. Add one in <a href="/settings" className="underline font-bold">Settings</a> to unlock DALL-E image generation.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {content?.slice().reverse().map((item) => (
@@ -253,7 +321,7 @@ export default function ContentPage() {
                     if (!db) return;
                     deleteDoc(doc(db, "content", (item.id as unknown as string))).then(() => {
                       queryClient.invalidateQueries({ queryKey: ["content"] });
-                      toast({ title: "Content removed" });
+                      toast({ title: "🗑️ Content removed" });
                     });
                   }}
                 >
@@ -325,7 +393,11 @@ export default function ContentPage() {
             </div>
             <div className="space-y-1">
               <p className="text-sm font-bold text-muted-foreground">Digital Assets Empty</p>
-              <p className="text-xs text-muted-foreground/60">Generate your first AI asset to begin.</p>
+              <p className="text-xs text-muted-foreground/60">
+                {hasAnyKey 
+                  ? "Generate your first AI asset to begin." 
+                  : "Add API keys in Settings to start generating content."}
+              </p>
             </div>
           </div>
         )}
