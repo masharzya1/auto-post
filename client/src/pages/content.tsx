@@ -73,10 +73,6 @@ export default function ContentPage() {
       const provider = model.includes("gpt") ? "openai" : 
                        model.includes("claude") ? "anthropic" : "google";
 
-      const apiKey = model.includes("gpt") ? settings?.openaiApiKey : 
-                    model.includes("claude") ? settings?.claudeApiKey : 
-                    settings?.geminiApiKey;
-
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

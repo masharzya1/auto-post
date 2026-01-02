@@ -1,0 +1,48 @@
+22:13:29.906 Running build in Washington, D.C., USA (East) – iad1
+22:13:29.915 Build machine configuration: 2 cores, 8 GB
+22:13:30.455 Cloning github.com/masharzya1/auto-post (Branch: main, Commit: 6afef56)
+22:13:31.780 Cloning completed: 1.324s
+22:13:32.381 Restored build cache from previous deployment (GAuC6jLTPpdKPDCutMVqjQ7hzxJu)
+22:13:33.331 Running "vercel build"
+22:13:33.752 Vercel CLI 50.1.3
+22:13:34.323 Installing dependencies...
+22:13:36.191 
+22:13:36.191 up to date in 2s
+22:13:36.192 
+22:13:36.192 88 packages are looking for funding
+22:13:36.192   run `npm fund` for details
+22:13:36.229 Running "npm run vercel-build"
+22:13:36.324 
+22:13:36.325 > rest-express@1.0.0 vercel-build
+22:13:36.325 > vite build
+22:13:36.325 
+22:13:36.615 [36mvite v7.3.0 [32mbuilding client environment for production...[36m[39m
+22:13:37.036 transforming...
+22:13:38.022 
+22:13:38.023 A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+22:13:38.390 [32m✓[39m 16 modules transformed.
+22:13:38.395 [31m✗[39m Build failed in 1.75s
+22:13:38.396 [31merror during build:
+22:13:38.396 [31m[vite:esbuild] Transform failed with 1 error:
+22:13:38.396 /vercel/path0/client/src/pages/content.tsx:76:12: ERROR: The symbol "apiKey" has already been declared[31m
+22:13:38.396 file: [36m/vercel/path0/client/src/pages/content.tsx:76:12[31m
+22:13:38.396 [33m
+22:13:38.396 [33mThe symbol "apiKey" has already been declared[33m
+22:13:38.397 74 |                         model.includes("claude") ? "anthropic" : "google";
+22:13:38.397 75 |  
+22:13:38.397 76 |        const apiKey = model.includes("gpt") ? settings?.openaiApiKey : 
+22:13:38.397    |              ^
+22:13:38.397 77 |                      model.includes("claude") ? settings?.claudeApiKey : 
+22:13:38.397 78 |                      settings?.geminiApiKey;
+22:13:38.397 [31m
+22:13:38.397     at failureErrorWithLog (/vercel/path0/node_modules/vite/node_modules/esbuild/lib/main.js:1467:15)
+22:13:38.397     at /vercel/path0/node_modules/vite/node_modules/esbuild/lib/main.js:736:50
+22:13:38.397     at responseCallbacks.<computed> (/vercel/path0/node_modules/vite/node_modules/esbuild/lib/main.js:603:9)
+22:13:38.397     at handleIncomingPacket (/vercel/path0/node_modules/vite/node_modules/esbuild/lib/main.js:658:12)
+22:13:38.398     at Socket.readFromStdout (/vercel/path0/node_modules/vite/node_modules/esbuild/lib/main.js:581:7)
+22:13:38.398     at Socket.emit (node:events:508:28)
+22:13:38.398     at addChunk (node:internal/streams/readable:559:12)
+22:13:38.398     at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+22:13:38.398     at Readable.push (node:internal/streams/readable:390:5)
+22:13:38.398     at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)[39m
+22:13:38.454 Error: Command "npm run vercel-build" exited with 1
