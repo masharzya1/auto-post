@@ -8,18 +8,37 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { db, auth } from "@/lib/firebase";
+import { doc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 
 export default function Dashboard() {
   const { data: limits, isLoading: isLoadingLimits } = useQuery<Limits>({
-    queryKey: ["/api/limits"],
+    queryKey: ["limits"],
+    queryFn: async () => {
+      if (!db || !auth?.currentUser) return null;
+      const docSnap = await getDoc(doc(db, "limits", auth.currentUser.uid));
+      return docSnap.exists() ? docSnap.data() as Limits : null;
+    }
   });
 
   const { data: content, isLoading: isLoadingContent } = useQuery<Content[]>({
-    queryKey: ["/api/content"],
+    queryKey: ["content"],
+    queryFn: async () => {
+      if (!db || !auth?.currentUser) return [];
+      const q = query(collection(db, "content"), where("userId", "==", auth.currentUser.uid));
+      const snap = await getDocs(q);
+      return snap.docs.map(doc => ({ ...doc.data(), id: doc.id }) as any);
+    }
   });
 
   const { data: workflows, isLoading: isLoadingWorkflows } = useQuery<Workflow[]>({
-    queryKey: ["/api/workflows"],
+    queryKey: ["workflows"],
+    queryFn: async () => {
+      if (!db || !auth?.currentUser) return [];
+      const q = query(collection(db, "workflows"), where("userId", "==", auth.currentUser.uid));
+      const snap = await getDocs(q);
+      return snap.docs.map(doc => ({ ...doc.data(), id: doc.id }) as any);
+    }
   });
 
   const recentPosts = content?.slice(-5).reverse() || [];

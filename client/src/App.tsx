@@ -1,6 +1,5 @@
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -10,8 +9,7 @@ import { loginWithGoogle } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Sparkles, Rocket, Cpu, Globe } from "lucide-react";
-import { useState, useEffect } from "react";
-import { apiRequest } from "./lib/queryClient";
+import { useState } from "react";
 
 import Dashboard from "@/pages/dashboard";
 import SettingsPage from "@/pages/settings";
@@ -19,22 +17,18 @@ import WorkflowsPage from "@/pages/workflows";
 import ContentPage from "@/pages/content";
 import NotFound from "@/pages/not-found";
 
+const queryClient = new QueryClient();
+
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
-
-  useEffect(() => {
-    if (user) {
-      apiRequest("POST", "/api/auth/sync", { uid: user.uid, email: user.email });
-    }
-  }, [user]);
 
   const handleLogin = async () => {
     setIsSigningIn(true);
     try {
       await loginWithGoogle();
     } catch (error) {
-      console.error("Login component error:", error);
+      console.error("Login error:", error);
     } finally {
       setIsSigningIn(false);
     }
@@ -44,6 +38,12 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-background gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground animate-pulse font-medium">
+          {isSigningIn ? "Securely signing you in..." : "Initializing Platform..."}
+        </p>
+      </div>
+    );
+  }
         <p className="text-sm text-muted-foreground animate-pulse font-medium">
           {isSigningIn ? "Securely signing you in..." : "Initializing Platform..."}
         </p>

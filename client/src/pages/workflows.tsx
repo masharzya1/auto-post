@@ -6,87 +6,68 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { type Workflow, type Content, insertWorkflowSchema } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Play, Settings2, Clock, Calendar, BarChart3, CheckCircle2, Plus, Info } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { db, auth } from "@/lib/firebase";
+import { collection, getDocs, query, where, addDoc, updateDoc, doc, deleteDoc } from "firebase/firestore";
 
 export default function WorkflowsPage() {
   const { toast } = useToast();
-  const { data: workflows, isLoading } = useQuery<Workflow[]>({ queryKey: ["/api/workflows"] });
-  const { data: content } = useQuery<Content[]>({ queryKey: ["/api/content"] });
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [cronValue, setCronValue] = useState("");
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isTriggering, setIsTriggering] = useState<number | null>(null);
-
-  const pendingItems = content?.filter(c => c.status === "pending").length || 0;
-  const totalItems = content?.length || 0;
-  const readyItems = content?.filter(c => c.status === "ready").length || 0;
-  const growthRate = totalItems > 0 ? ((readyItems / totalItems) * 100).toFixed(0) : "0";
-  const growth = totalItems > 0 ? `+${growthRate}%` : "0%";
-
-  const triggerMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await apiRequest("POST", `/api/workflows/${id}/trigger`, {});
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/content"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/workflows"] });
-      toast({ title: "Success", description: "Workflow executed! Check your library." });
-    },
-    onSettled: () => setIsTriggering(null)
-  });
-
-  const createForm = useForm({
-    resolver: zodResolver(insertWorkflowSchema),
-    defaultValues: {
-      name: "",
-      enabled: true,
-      cronSchedule: "0 9 * * *",
-      contentType: "text",
-      includeHashtags: true,
+  
+  const { data: workflows, isLoading } = useQuery<Workflow[]>({ 
+    queryKey: ["workflows"],
+    queryFn: async () => {
+      if (!db || !auth?.currentUser) return [];
+      const q = query(collection(db, "workflows"), where("userId", "==", auth.currentUser.uid));
+      const snap = await getDocs(q);
+      return snap.docs.map(doc => ({ ...doc.data(), id: doc.id }) as any);
     }
   });
 
+  const { data: content } = useQuery<Content[]>({ 
+    queryKey: ["content"],
+    queryFn: async () => {
+      if (!db || !auth?.currentUser) return [];
+      const q = query(collection(db, "content"), where("userId", "==", auth.currentUser.uid));
+      const snap = await getDocs(q);
+      return snap.docs.map(doc => ({ ...doc.data(), id: doc.id }) as any);
+    }
+  });
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [cronValue, setCronValue] = useState("");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isTriggering, setIsTriggering] = useState<string | null>(null);
+
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/workflows", data);
-      return res.json();
+      if (!db || !auth?.currentUser) throw new Error("Not authenticated");
+      const docRef = await addDoc(collection(db, "workflows"), {
+        ...data,
+        userId: auth.currentUser.uid,
+        status: "idle",
+        createdAt: new Date().toISOString()
+      });
+      return { ...data, id: docRef.id };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/workflows"] });
+      queryClient.invalidateQueries({ queryKey: ["workflows"] });
       setIsCreateOpen(false);
-      createForm.reset();
-      toast({ title: "Workflow created", description: "Your new automation is ready to go." });
+      toast({ title: "Workflow created" });
     },
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async ({ id, enabled }: { id: number; enabled: boolean }) => {
-      const res = await apiRequest("POST", `/api/workflows/${id}/toggle`, { enabled });
-      return res.json();
+    mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
+      if (!db) return;
+      await updateDoc(doc(db, "workflows", id), { enabled });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/workflows"] });
-      toast({ title: "Workflow status updated" });
-    },
-  });
-
-  const updateCronMutation = useMutation({
-    mutationFn: async ({ id, cronSchedule }: { id: number; cronSchedule: string }) => {
-      const res = await apiRequest("PATCH", `/api/workflows/${id}`, { cronSchedule });
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/workflows"] });
-      setEditingId(null);
-      toast({ title: "Schedule updated", description: "The automation timer has been reset." });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["workflows"] }),
   });
 
   if (isLoading) {

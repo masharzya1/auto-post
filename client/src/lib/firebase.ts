@@ -1,5 +1,6 @@
 import { initializeApp, type FirebaseApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence, onAuthStateChanged, type Auth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence, type Auth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,11 +18,13 @@ const isFirebaseConfigured = Boolean(
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
+let db: any = null;
 let googleProvider: GoogleAuthProvider | null = null;
 
 if (isFirebaseConfigured) {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
+  db = getFirestore(app);
   googleProvider = new GoogleAuthProvider();
   googleProvider.setCustomParameters({
     prompt: 'select_account'
@@ -29,7 +32,7 @@ if (isFirebaseConfigured) {
   setPersistence(auth, browserLocalPersistence);
 }
 
-export { auth, googleProvider };
+export { auth, db, googleProvider };
 
 export const loginWithGoogle = async () => {
   if (!auth || !googleProvider) {
@@ -37,30 +40,14 @@ export const loginWithGoogle = async () => {
   }
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    console.log("Sign-in successful:", result.user.email);
-    
-    localStorage.setItem("auth_provider", "google");
-    localStorage.setItem("last_login", new Date().toISOString());
-    
     return result.user;
   } catch (error: any) {
-    console.error("Firebase popup sign-in error:", error.code, error.message);
-    if (error.code === 'auth/popup-blocked') {
-      alert("Please enable popups for this site to sign in.");
-    } else {
-      alert(`Sign-in failed: ${error.message}`);
-    }
+    console.error("Firebase popup sign-in error:", error);
     throw error;
   }
 };
 
 export const logout = () => {
-  localStorage.removeItem("auth_provider");
-  localStorage.removeItem("last_login");
-  if (auth) {
-    return auth.signOut();
-  }
+  if (auth) return auth.signOut();
   return Promise.resolve();
 };
-
-export const handleAuthRedirect = () => Promise.resolve(null);

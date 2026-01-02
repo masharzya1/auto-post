@@ -8,42 +8,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSettingsSchema, type Settings } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Key, Cpu, AlertCircle, Sparkles, Star } from "lucide-react";
+import { Loader2, Save, Key, Cpu, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-const MODELS = {
-  photos: [
-    { id: "gpt-image-1", name: "DALL-E 3 (OpenAI)", provider: "openai", canGen: true, tier: "Free" },
-    { id: "stable-diffusion-xl", name: "Stable Diffusion XL", provider: "custom", canGen: true, tier: "Pro" },
-    { id: "midjourney-v6", name: "Midjourney v6", provider: "custom", canGen: false, tier: "Pro" },
-    { id: "flux-1-dev", name: "Flux.1 Dev", provider: "custom", canGen: true, tier: "Pro" },
-  ],
-  caption: [
-    { id: "gpt-4o", name: "GPT-4o (Most Capable)", provider: "openai", canGen: true, tier: "Pro" },
-    { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "openai", canGen: true, tier: "Free" },
-    { id: "claude-3-5-sonnet", name: "Claude 3.5 Sonnet", provider: "anthropic", canGen: true, tier: "Pro" },
-    { id: "gemini-1-5-pro", name: "Gemini 1.5 Pro", provider: "google", canGen: true, tier: "Pro" },
-    { id: "llama-3-1-70b", name: "Llama 3.1 70B", provider: "meta", canGen: true, tier: "Free" },
-    { id: "deepseek-chat", name: "DeepSeek V3", provider: "deepseek", canGen: true, tier: "Free" },
-    { id: "o1-mini", name: "OpenAI o1-mini", provider: "openai", canGen: true, tier: "Pro" },
-  ],
-  videos: [
-    { id: "sora", name: "Sora (OpenAI)", provider: "openai", canGen: false, tier: "Pro" },
-    { id: "runway-gen-3", name: "Runway Gen-3 Alpha", provider: "runway", canGen: false, tier: "Pro" },
-    { id: "luma-dream-machine", name: "Luma Dream Machine", provider: "luma", canGen: false, tier: "Pro" },
-    { id: "kling-ai", name: "Kling AI", provider: "kling", canGen: false, tier: "Pro" },
-  ]
-};
+import { db, auth } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const { data: settings, isLoading } = useQuery<Settings>({ queryKey: ["/api/settings"] });
+  
+  const { data: settings, isLoading } = useQuery<Settings>({ 
+    queryKey: ["settings"],
+    queryFn: async () => {
+      if (!db || !auth?.currentUser) return null;
+      const docRef = doc(db, "settings", auth.currentUser.uid);
+      const docSnap = await getDoc(docRef);
+      return docSnap.exists() ? docSnap.data() as Settings : null;
+    }
+  });
 
   const form = useForm({
     resolver: zodResolver(insertSettingsSchema),
-    defaultValues: settings || {
+    values: settings || {
       fbPageId: "",
       ytChannelId: "",
       niche: "Motivation",
@@ -62,12 +49,13 @@ export default function SettingsPage() {
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/settings", data);
-      return res.json();
+      if (!db || !auth?.currentUser) throw new Error("Not authenticated");
+      await setDoc(doc(db, "settings", auth.currentUser.uid), data);
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
-      toast({ title: "Settings saved", description: "Your configuration and AI models have been updated." });
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      toast({ title: "Settings saved", description: "Updated in Firebase." });
     },
   });
 

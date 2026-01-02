@@ -1,65 +1,61 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { type Content, api } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { type Content } from "@shared/schema";
+import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, FileText, Image as ImageIcon, Video, Eye, Send, Trash2, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { db, auth } from "@/lib/firebase";
+import { collection, getDocs, query, where, addDoc, deleteDoc, doc } from "firebase/firestore";
 
 export default function ContentPage() {
   const { toast } = useToast();
-  const { data: content, isLoading } = useQuery<Content[]>({ queryKey: [api.content.list.path] });
+  
+  const { data: content, isLoading } = useQuery<Content[]>({ 
+    queryKey: ["content"],
+    queryFn: async () => {
+      if (!db || !auth?.currentUser) return [];
+      const q = query(collection(db, "content"), where("userId", "==", auth.currentUser.uid));
+      const snap = await getDocs(q);
+      return snap.docs.map(doc => ({ ...doc.data(), id: doc.id }) as any);
+    }
+  });
 
   const generateMutation = useMutation({
     mutationFn: async (type: string) => {
-      const res = await apiRequest("POST", api.content.generate.path, { type });
-      return res.json();
+      if (!db || !auth?.currentUser) throw new Error("Not authenticated");
+      // For now, client-side "generation" just creates a record
+      // In a real app, you'd call an external AI service here
+      const data = type === "text" 
+        ? { text: "AI Generated Caption (Client-side)", hashtags: ["trending"] }
+        : { url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe", prompt: "Digital Art" };
+      
+      const docRef = await addDoc(collection(db, "content"), {
+        type,
+        userId: auth.currentUser.uid,
+        data,
+        status: "ready",
+        createdAt: new Date().toISOString()
+      });
+      return { id: docRef.id, type };
     },
     onSuccess: (newItem) => {
-      queryClient.invalidateQueries({ queryKey: [api.content.list.path] });
-      queryClient.invalidateQueries({ queryKey: ["/api/limits"] });
-      toast({ 
-        title: "Content Created!", 
-        description: `Successfully generated a new ${newItem.type} asset.`,
-        className: "bg-primary text-primary-foreground border-none shadow-lg"
-      });
+      queryClient.invalidateQueries({ queryKey: ["content"] });
+      toast({ title: "Content Created!" });
     },
-    onError: (error: any) => {
-      toast({ 
-        title: "Generation Failed", 
-        description: error.message || "An unexpected error occurred.",
-        variant: "destructive" 
-      });
-    }
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/content/${id}`);
+    mutationFn: async (id: string) => {
+      if (!db) return;
+      await deleteDoc(doc(db, "content", id));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.content.list.path] });
-      toast({ title: "Content removed from library" });
+      queryClient.invalidateQueries({ queryKey: ["content"] });
+      toast({ title: "Content removed" });
     },
-  });
-
-  const postMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await apiRequest("POST", `/api/content/${id}/post`, {});
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Successfully posted!", description: "Your content is live on Facebook." });
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: "Posting failed", 
-        description: error.message || "Check your Facebook settings.",
-        variant: "destructive"
-      });
-    }
   });
 
   if (isLoading) {
