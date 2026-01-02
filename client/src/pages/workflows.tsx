@@ -94,20 +94,20 @@ export default function WorkflowsPage() {
               Create New Workflow
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-background">
+          <DialogContent className="bg-white dark:bg-gray-950 border-none shadow-2xl">
             <DialogHeader>
-              <DialogTitle>New Content Workflow</DialogTitle>
-              <CardDescription>Configure an automated schedule for content generation.</CardDescription>
+              <DialogTitle className="text-xl font-bold">New Content Workflow</DialogTitle>
+              <CardDescription className="text-muted-foreground">Configure an automated schedule for content generation.</CardDescription>
             </DialogHeader>
-            <form onSubmit={createForm.handleSubmit((data) => createMutation.mutate(data))} className="space-y-4 pt-4">
+            <form onSubmit={createForm.handleSubmit((data) => createMutation.mutate(data))} className="space-y-6 pt-6">
               <div className="space-y-2">
-                <Label>Workflow Name</Label>
-                <Input {...createForm.register("name")} placeholder="e.g. Daily Motivation Posts" />
+                <Label className="text-sm font-semibold">Workflow Name</Label>
+                <Input {...createForm.register("name")} placeholder="e.g. Daily Motivation Posts" className="bg-muted/30 border-muted-foreground/20 focus:bg-background transition-colors" />
               </div>
               <div className="space-y-2">
-                <Label>Schedule (Posting Time)</Label>
+                <Label className="text-sm font-semibold">Schedule (Posting Time)</Label>
                 <select 
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full rounded-md border border-muted-foreground/20 bg-muted/30 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 focus:bg-background transition-colors"
                   {...createForm.register("cronSchedule")}
                 >
                   <option value="0 9 * * *">Every day at 9:00 AM</option>
@@ -116,10 +116,10 @@ export default function WorkflowsPage() {
                   <option value="0 21 * * *">Every day at 9:00 PM</option>
                   <option value="0 0 * * *">Every day at Midnight</option>
                 </select>
-                <p className="text-[10px] text-muted-foreground italic">Select a time for the automation to run daily.</p>
+                <p className="text-[10px] text-muted-foreground italic font-medium">Select a time for the automation to run daily.</p>
               </div>
-              <DialogFooter>
-                <Button type="submit" disabled={createMutation.isPending}>
+              <DialogFooter className="pt-4 border-t border-muted/20">
+                <Button type="submit" size="lg" className="w-full sm:w-auto font-bold" disabled={createMutation.isPending}>
                   {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   Establish Workflow
                 </Button>
