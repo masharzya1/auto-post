@@ -11,6 +11,7 @@ export interface IStorage {
   updateWorkflow(id: number, enabled: boolean): Promise<Workflow>;
   getContent(): Promise<Content[]>;
   createContent(data: any): Promise<Content>;
+  deleteContent(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -53,6 +54,9 @@ export class DatabaseStorage implements IStorage {
   async createContent(data: any) {
     const [created] = await db.insert(content).values(data).returning();
     return created;
+  }
+  async deleteContent(id: number) {
+    await db.delete(content).where(eq(content.id, id));
   }
 }
 

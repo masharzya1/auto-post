@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
+import { openai } from "./replit_integrations/image/client";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   registerChatRoutes(app);
@@ -44,14 +45,53 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(c);
   });
 
+  app.delete("/api/content/:id", async (req, res) => {
+    await storage.deleteContent(Number(req.params.id));
+    res.sendStatus(204);
+  });
+
   app.post(api.content.generate.path, async (req, res) => {
     const { type } = req.body;
-    const c = await storage.createContent({ 
-      type, 
-      data: { prompt: `Generated ${type} content` }, 
-      status: "ready" 
-    });
-    res.json(c);
+    const settings = await storage.getSettings();
+    const niche = settings?.niche || "General";
+    
+    let generatedData = {};
+    
+    try {
+      if (type === "text") {
+        const response = await openai.chat.completions.create({
+          model: "gpt-5",
+          messages: [{ role: "user", content: `Write a social media post for the ${niche} niche.` }],
+        });
+        generatedData = { text: response.choices[0].message.content };
+      } else if (type === "image") {
+        const response = await openai.images.generate({
+          model: "gpt-image-1",
+          prompt: `A professional image for a social media post in the ${niche} niche.`,
+        });
+        generatedData = { url: response.data[0].url, prompt: response.data[0].revised_prompt };
+      }
+
+      const c = await storage.createContent({ 
+        type, 
+        data: generatedData, 
+        status: "ready" 
+      });
+
+      // Update limits
+      const limits = await storage.getLimits();
+      if (limits) {
+        await storage.updateLimits({
+          textUsed: type === "text" ? (limits.textUsed || 0) + 1 : limits.textUsed,
+          imageUsed: type === "image" ? (limits.imageUsed || 0) + 1 : limits.imageUsed,
+        });
+      }
+
+      res.json(c);
+    } catch (error: any) {
+      console.error("AI Generation failed:", error);
+      res.status(500).json({ error: error.message });
+    }
   });
 
   return httpServer;
