@@ -6,10 +6,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { useAuth } from "@/hooks/use-auth";
-import { loginWithGoogle } from "@/lib/firebase";
+import { loginWithGoogle, handleAuthRedirect } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Sparkles } from "lucide-react";
+import { useEffect } from "react";
 
 import Dashboard from "@/pages/dashboard";
 import SettingsPage from "@/pages/settings";
@@ -19,6 +20,10 @@ import NotFound from "@/pages/not-found";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+
+  useEffect(() => {
+    handleAuthRedirect();
+  }, []);
 
   if (loading) {
     return (
