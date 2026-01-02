@@ -1,4 +1,4 @@
-import { adminDb } from "./firebase";
+import { adminDb } from "./firebase-config";
 import { type Settings, type Limits, type Workflow, type Content } from "@shared/schema";
 
 export interface IStorage {
