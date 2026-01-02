@@ -65,7 +65,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
               <Sparkles className="h-10 w-10 text-primary animate-pulse" />
             </div>
             <div className="space-y-1.5">
-              <CardTitle className="text-4xl font-black tracking-tighter bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+              <CardTitle className="text-4xl font-black tracking-tighter text-foreground">
                 AUTO-CONTENT
               </CardTitle>
               <p className="text-sm font-medium text-muted-foreground tracking-widest uppercase">
