@@ -26,6 +26,8 @@ const MODELS = {
     { id: "claude-3-5-sonnet", name: "Claude 3.5 Sonnet", provider: "anthropic", canGen: true, tier: "Pro" },
     { id: "gemini-1-5-pro", name: "Gemini 1.5 Pro", provider: "google", canGen: true, tier: "Pro" },
     { id: "llama-3-1-70b", name: "Llama 3.1 70B", provider: "meta", canGen: true, tier: "Free" },
+    { id: "deepseek-chat", name: "DeepSeek V3", provider: "deepseek", canGen: true, tier: "Free" },
+    { id: "o1-mini", name: "OpenAI o1-mini", provider: "openai", canGen: true, tier: "Pro" },
   ],
   videos: [
     { id: "sora", name: "Sora (OpenAI)", provider: "openai", canGen: false, tier: "Pro" },
@@ -100,10 +102,10 @@ export default function SettingsPage() {
               <div className="space-y-3">
                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Photo Generation</Label>
                 <Select value={form.watch("photoModel")} onValueChange={(v) => form.setValue("photoModel", v)}>
-                  <SelectTrigger className="h-11">
+                  <SelectTrigger className="h-11 bg-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     {MODELS.photos.map(m => (
                       <SelectItem key={m.id} value={m.id}>
                         <div className="flex items-center justify-between w-full gap-2">
@@ -121,10 +123,10 @@ export default function SettingsPage() {
               <div className="space-y-3">
                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Smart Captions</Label>
                 <Select value={form.watch("captionModel")} onValueChange={(v) => form.setValue("captionModel", v)}>
-                  <SelectTrigger className="h-11">
+                  <SelectTrigger className="h-11 bg-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     {MODELS.caption.map(m => (
                       <SelectItem key={m.id} value={m.id}>
                         <div className="flex items-center justify-between w-full gap-2">
@@ -141,9 +143,9 @@ export default function SettingsPage() {
 
               <div className="space-y-3">
                 <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Cinematic Video</Label>
-                <Select value={form.watch("videoModel")} onValueChange={(v) => form.setValue("videoModel", v)}>
-                  <SelectTrigger className="h-11">
-                    <SelectValue />
+                <Select disabled value={form.watch("videoModel")} onValueChange={(v) => form.setValue("videoModel", v)}>
+                  <SelectTrigger className="h-11 opacity-50">
+                    <SelectValue placeholder="Coming Soon..." />
                   </SelectTrigger>
                   <SelectContent>
                     {MODELS.videos.map(m => (
@@ -151,7 +153,7 @@ export default function SettingsPage() {
                         <div className="flex items-center justify-between w-full gap-2">
                           <span className="font-medium">{m.name}</span>
                           <Badge variant="outline" className="text-[9px] px-1 h-3.5 border-primary/30 text-primary">
-                            Beta
+                            Coming Soon
                           </Badge>
                         </div>
                       </SelectItem>

@@ -79,9 +79,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const l = await storage.getLimits();
 
     try {
-      // Logic for workflow: Always creates a text + image pair for impact
-      const textData = { text: `AI Generated Caption for ${s?.niche || 'Universal'} niche. #sparkpost #automation` };
-      const imageData = { url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe", prompt: "SparkPost AI visual" };
+      // Logic for workflow: Uses selected models from settings
+      const captionModel = s?.captionModel || "gpt-4o-mini";
+      const photoModel = s?.photoModel || "gpt-image-1";
+      
+      const textData = { 
+        text: `AI Generated Caption (${captionModel}) for ${s?.niche || 'Universal'} niche. #sparkpost #automation`,
+        model: captionModel 
+      };
+      const imageData = { 
+        url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe", 
+        prompt: `SparkPost AI visual generated via ${photoModel}`,
+        model: photoModel
+      };
       
       await storage.updateLimits({ 
         textUsed: (l?.textUsed || 0) + 1,
