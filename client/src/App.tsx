@@ -81,8 +81,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
                   <Cpu className="h-4 w-4 text-primary" />
                 </div>
                 <div className="space-y-0.5">
-                  <p className="font-semibold leading-none">Multi-Model AI</p>
-                  <p className="text-muted-foreground/80 text-xs">Access GPT-4o, Claude 3.5 & more</p>
+                  <p className="font-semibold leading-none">AI Asset Engine</p>
+                  <p className="text-muted-foreground/80 text-xs">Generate pro-grade captions & images</p>
                 </div>
               </div>
 
@@ -91,8 +91,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
                   <Rocket className="h-4 w-4 text-primary" />
                 </div>
                 <div className="space-y-0.5">
-                  <p className="font-semibold leading-none">Smart Scheduling</p>
-                  <p className="text-muted-foreground/80 text-xs">Automatic posting to social platforms</p>
+                  <p className="font-semibold leading-none">Auto-Pilot Posting</p>
+                  <p className="text-muted-foreground/80 text-xs">Set daily schedules for hands-free reach</p>
                 </div>
               </div>
 
@@ -101,8 +101,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
                   <Globe className="h-4 w-4 text-primary" />
                 </div>
                 <div className="space-y-0.5">
-                  <p className="font-semibold leading-none">Global Reach</p>
-                  <p className="text-muted-foreground/80 text-xs">Facebook & YT optimization</p>
+                  <p className="font-semibold leading-none">Smart Analytics</p>
+                  <p className="text-muted-foreground/80 text-xs">Monitor engagement & usage growth</p>
                 </div>
               </div>
             </div>

@@ -1,15 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles, Image, Video, FileText, Zap, Clock, Send, BarChart3, Info, PlayCircle } from "lucide-react";
-import type { Limits, Content, Workflow } from "@shared/schema";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { useQuery } from "@tanstack/react-query";
 import { Sparkles, Image, Video, FileText, Zap, Clock, Send, BarChart3, Info, PlayCircle, BookOpen, Rocket, ShieldCheck } from "lucide-react";
 import type { Limits, Content, Workflow } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
