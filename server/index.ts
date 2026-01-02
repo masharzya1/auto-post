@@ -8,6 +8,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get("/api/settings", async (req, res) => {
+  // In a real app, fetch from DB
+  res.json({
+    openaiApiKey: process.env.OPENAI_API_KEY,
+    photoModel: "dall-e-3",
+    captionModel: "gpt-4o-mini"
+  });
+});
+
 app.post("/api/generate", async (req, res) => {
   const { type, niche, model, provider, apiKey } = req.body;
   

@@ -85,6 +85,9 @@ export default function WorkflowsPage() {
     mutationFn: async (workflow: Workflow) => {
       if (!db || !auth?.currentUser) throw new Error("Not authenticated");
       
+      const settingsResponse = await fetch("/api/settings");
+      const settings = await settingsResponse.json();
+      
       // Direct generation logic for "Run Now"
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -94,7 +97,7 @@ export default function WorkflowsPage() {
           niche: workflow.niche || "General",
           model: "gpt-4o-mini", // Fallback to default or use settings
           provider: "openai",
-          apiKey: (await (await fetch("/api/settings")).json()).openaiApiKey
+          apiKey: settings.openaiApiKey
         })
       });
       
