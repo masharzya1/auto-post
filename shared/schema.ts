@@ -49,6 +49,7 @@ export const workflows = pgTable("workflows", {
   contentType: text("content_type").default("text").notNull(), // text, image, video, image_text
   includeHashtags: boolean("include_hashtags").default(true).notNull(),
   runsPerDay: integer("runs_per_day").default(1).notNull(),
+  postingTimes: text("posting_times").array(), // Array of times like ["09:00", "14:00"]
   niche: text("niche"), // Override global niche if set
 });
 

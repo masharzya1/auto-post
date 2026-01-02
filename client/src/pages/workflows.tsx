@@ -220,7 +220,22 @@ export default function WorkflowsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold">Runs Per Day</Label>
-                  <Input type="number" {...createForm.register("runsPerDay", { valueAsNumber: true })} min={1} max={10} className="h-10 bg-white" />
+                  <Input 
+                    type="number" 
+                    {...createForm.register("runsPerDay", { valueAsNumber: true })} 
+                    min={1} max={10} 
+                    className="h-10 bg-white" 
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      const currentTimes = createForm.getValues("postingTimes") || [];
+                      if (val > currentTimes.length) {
+                        const newTimes = [...currentTimes, ...Array(val - currentTimes.length).fill("09:00")];
+                        createForm.setValue("postingTimes", newTimes);
+                      } else {
+                        createForm.setValue("postingTimes", currentTimes.slice(0, val));
+                      }
+                    }}
+                  />
                 </div>
                 <div className="flex items-center space-x-2 pt-8">
                   <Switch 
@@ -231,20 +246,30 @@ export default function WorkflowsPage() {
                   <Label htmlFor="hashtags" className="text-sm font-semibold">Hashtags</Label>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">Schedule (Posting Time)</Label>
-                <select 
-                  className="flex h-10 w-full rounded-md border border-muted-foreground/20 bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus:bg-background transition-colors"
-                  {...createForm.register("cronSchedule")}
-                >
-                  <option value="0 9 * * *">Every day at 9:00 AM</option>
-                  <option value="0 12 * * *">Every day at 12:00 PM</option>
-                  <option value="0 18 * * *">Every day at 6:00 PM</option>
-                  <option value="0 21 * * *">Every day at 9:00 PM</option>
-                  <option value="0 0 * * *">Every day at Midnight</option>
-                </select>
-                <p className="text-[10px] text-muted-foreground italic font-medium">Select a time for the automation to run daily.</p>
-              </div>
+
+              {createForm.watch("runsPerDay") > 0 && (
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold">Specific Posting Times</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {Array.from({ length: createForm.watch("runsPerDay") }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          type="time" 
+                          className="bg-white h-9"
+                          defaultValue={createForm.getValues(`postingTimes.${i}`) || "09:00"}
+                          onChange={(e) => {
+                            const times = createForm.getValues("postingTimes") || [];
+                            times[i] = e.target.value;
+                            createForm.setValue("postingTimes", times);
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground italic">Set the exact time for each post during the day.</p>
+                </div>
+              )}
               <DialogFooter className="pt-4 border-t border-muted/20">
                 <Button type="submit" size="lg" className="w-full sm:w-auto font-bold" disabled={createMutation.isPending}>
                   {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}

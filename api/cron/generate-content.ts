@@ -15,14 +15,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // 1. Fetch settings and active workflows from DB
-    // This part requires your specific DB setup (e.g., Drizzle with Postgres)
-    // For now, we simulate the logic:
+    // We filter for workflows that should run at the current hour/minute
+    const now = new Date();
+    const currentHourMin = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    
+    // Logic: In a real DB call, you'd check if currentHourMin exists in the 'postingTimes' array
+    // Example Drizzle query logic:
+    // const activeWorkflows = await db.select().from(workflows).where(
+    //   and(
+    //     eq(workflows.enabled, true),
+    //     sql`${currentHourMin} = ANY(${workflows.postingTimes})`
+    //   )
+    // );
     
     const mockWorkflow = {
       id: 1,
       niche: "Technology",
-      contentType: "image_text", // Can be 'text', 'image', 'image_text'
-      includeHashtags: true
+      contentType: "image_text", 
+      includeHashtags: true,
+      postingTimes: ["09:00", "14:00"]
     };
 
     const mockSettings = {
