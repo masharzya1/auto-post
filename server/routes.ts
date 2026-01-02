@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage.js";
-import { content, workflows, users, api, insertWorkflowSchema } from "@shared/schema.js";
+import { content, workflows, users, api, insertWorkflowSchema } from "../shared/schema.js";
 
 import { getOpenAIInstance } from "./ai_integrations/image/client.js";
 

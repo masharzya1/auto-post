@@ -1,5 +1,5 @@
 import { adminDb } from "./firebase-config.js";
-import { type Settings, type Limits, type Workflow, type Content, type User } from "@shared/schema.js";
+import { type Settings, type Limits, type Workflow, type Content, type User } from "../shared/schema.js";
 
 export interface IStorage {
   getSettings(): Promise<Settings | undefined>;

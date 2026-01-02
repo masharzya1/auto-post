@@ -1,43 +1,97 @@
-import { db } from "../../db";
-import { conversations, messages } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { adminDb } from "../../firebase-config.js";
+import { type Conversation, type Message } from "../../../shared/schema.js";
 
 export interface IChatStorage {
-  getConversation(id: number): Promise<typeof conversations.$inferSelect | undefined>;
-  getAllConversations(): Promise<(typeof conversations.$inferSelect)[]>;
-  createConversation(title: string): Promise<typeof conversations.$inferSelect>;
+  getConversation(id: number): Promise<Conversation | undefined>;
+  getAllConversations(): Promise<Conversation[]>;
+  createConversation(title: string): Promise<Conversation>;
   deleteConversation(id: number): Promise<void>;
-  getMessagesByConversation(conversationId: number): Promise<(typeof messages.$inferSelect)[]>;
-  createMessage(conversationId: number, role: string, content: string): Promise<typeof messages.$inferSelect>;
+  getMessagesByConversation(conversationId: number): Promise<Message[]>;
+  createMessage(conversationId: number, role: string, content: string): Promise<Message>;
 }
 
-export const chatStorage: IChatStorage = {
+export class ChatFirebaseStorage implements IChatStorage {
+  private conversationsCol = adminDb.collection("conversations");
+  private messagesCol = adminDb.collection("messages");
+
   async getConversation(id: number) {
-    const [conversation] = await db.select().from(conversations).where(eq(conversations.id, id));
-    return conversation;
-  },
+    const snapshot = await this.conversationsCol.where("id", "==", id).limit(1).get();
+    if (snapshot.empty) return undefined;
+    const data = snapshot.docs[0].data();
+    return { 
+      id: data.id,
+      platformId: data.platformId || "",
+      content: data.content || "",
+      response: data.response || null,
+      status: data.status || "pending",
+      createdAt: new Date(data.createdAt) 
+    } as Conversation;
+  }
 
   async getAllConversations() {
-    return db.select().from(conversations).orderBy(desc(conversations.createdAt));
-  },
+    const snapshot = await this.conversationsCol.orderBy("createdAt", "desc").get();
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return { 
+        id: data.id,
+        platformId: data.platformId || "",
+        content: data.content || "",
+        response: data.response || null,
+        status: data.status || "pending",
+        createdAt: new Date(data.createdAt) 
+      } as Conversation;
+    });
+  }
 
   async createConversation(title: string) {
-    const [conversation] = await db.insert(conversations).values({ title }).returning();
-    return conversation;
-  },
+    const id = Date.now();
+    const createdAt = new Date().toISOString();
+    const conversationData = { 
+      id, 
+      platformId: title, // Using title as platformId for now
+      content: title,
+      response: null,
+      status: "pending", 
+      createdAt 
+    };
+    await this.conversationsCol.add(conversationData);
+    return { ...conversationData, createdAt: new Date(createdAt) } as Conversation;
+  }
 
   async deleteConversation(id: number) {
-    await db.delete(messages).where(eq(messages.conversationId, id));
-    await db.delete(conversations).where(eq(conversations.id, id));
-  },
+    const messagesSnapshot = await this.messagesCol.where("conversationId", "==", id).get();
+    const batch = adminDb.batch();
+    messagesSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+    
+    const conversationSnapshot = await this.conversationsCol.where("id", "==", id).limit(1).get();
+    if (!conversationSnapshot.empty) {
+      batch.delete(conversationSnapshot.docs[0].ref);
+    }
+    await batch.commit();
+  }
 
   async getMessagesByConversation(conversationId: number) {
-    return db.select().from(messages).where(eq(messages.conversationId, conversationId)).orderBy(messages.createdAt);
-  },
+    const snapshot = await this.messagesCol.where("conversationId", "==", conversationId).orderBy("createdAt").get();
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return { 
+        id: data.id,
+        conversationId: data.conversationId,
+        role: data.role,
+        content: data.content,
+        createdAt: new Date(data.createdAt) 
+      } as Message;
+    });
+  }
 
   async createMessage(conversationId: number, role: string, content: string) {
-    const [message] = await db.insert(messages).values({ conversationId, role, content }).returning();
-    return message;
-  },
-};
+    const id = Date.now();
+    const createdAt = new Date().toISOString();
+    const messageData = { id, conversationId, role, content, createdAt };
+    await this.messagesCol.add(messageData);
+    return { ...messageData, createdAt: new Date(createdAt) } as Message;
+  }
+}
+
+export const chatStorage = new ChatFirebaseStorage();
 
