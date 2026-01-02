@@ -14,8 +14,8 @@ export const settings = pgTable("settings", {
   
   // Model Selections
   photoModel: text("photo_model").default("gpt-image-1").notNull(),
-  captionModel: text("caption_model").default("gpt-5").notNull(),
-  videoModel: text("video_model").default("next-gen-video").notNull(),
+  captionModel: text("caption_model").default("gpt-4o-mini").notNull(),
+  videoModel: text("video_model").default("luma-dream-machine").notNull(),
   
   // API Keys
   fbAccessToken: text("fb_access_token"),
@@ -64,6 +64,25 @@ export const users = pgTable("users", {
   lastLogin: timestamp("last_login").defaultNow().notNull(),
 });
 
+// Conversation history for auto-responder
+export const conversations = pgTable("conversations", {
+  id: serial("id").primaryKey(),
+  platformId: text("platform_id").notNull(),
+  content: text("content").notNull(),
+  response: text("response"),
+  status: text("status").default("pending").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Message history for chat-style integrations
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").references(() => conversations.id).notNull(),
+  role: text("role").notNull(), // 'user' or 'assistant'
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertSettingsSchema = createInsertSchema(settings).omit({ id: true });
 export const insertLimitsSchema = createInsertSchema(limits).omit({ id: true });
 export const insertWorkflowSchema = createInsertSchema(workflows).omit({ id: true, lastRun: true });
@@ -75,5 +94,13 @@ export type Limits = typeof limits.$inferSelect;
 export type Workflow = typeof workflows.$inferSelect;
 export type Content = typeof content.$inferSelect;
 export type User = typeof users.$inferSelect;
+export type Conversation = typeof conversations.$inferSelect;
+export type Message = typeof messages.$inferSelect;
 
-export * from "./models/chat";
+// Re-export api if it was coming from here
+export const api = {
+  settings: { get: { path: "/api/settings" }, update: { path: "/api/settings" } },
+  limits: { get: { path: "/api/limits" }, update: { path: "/api/limits" } },
+  workflows: { list: { path: "/api/workflows" }, toggle: { path: "/api/workflows/:id/toggle" } },
+  content: { list: { path: "/api/content" }, generate: { path: "/api/content/generate" } },
+};

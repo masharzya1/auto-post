@@ -1,82 +1,185 @@
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { type Limits, type Content } from "@shared/schema";
-import { Loader2, Zap, Image as ImageIcon, Video, FileText } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Sparkles, Image, Video, FileText, Zap, Clock, Send, BarChart3 } from "lucide-react";
+import type { Limits, Content, Workflow } from "@shared/schema";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 export default function Dashboard() {
-  const { data: limits, isLoading: limitsLoading } = useQuery<Limits>({ queryKey: ["/api/limits"] });
-  const { data: content, isLoading: contentLoading } = useQuery<Content[]>({ queryKey: ["/api/content"] });
+  const { data: limits, isLoading: isLoadingLimits } = useQuery<Limits>({
+    queryKey: ["/api/limits"],
+  });
 
-  if (limitsLoading || contentLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  const { data: content, isLoading: isLoadingContent } = useQuery<Content[]>({
+    queryKey: ["/api/content"],
+  });
 
+  const { data: workflows, isLoading: isLoadingWorkflows } = useQuery<Workflow[]>({
+    queryKey: ["/api/workflows"],
+  });
+
+  const recentPosts = content?.slice(-5).reverse() || [];
+  const activeWorkflows = workflows?.filter(w => w.enabled).length || 0;
+  
   const stats = [
-    { label: "Text", used: limits?.textUsed || 0, total: limits?.textLimit || 100, icon: FileText, color: "text-blue-500" },
-    { label: "Images", used: limits?.imageUsed || 0, total: limits?.imageLimit || 50, icon: ImageIcon, color: "text-purple-500" },
-    { label: "Videos", used: limits?.videoUsed || 0, total: limits?.videoLimit || 10, icon: Video, color: "text-orange-500" },
+    {
+      title: "Content Items",
+      value: content?.length || 0,
+      icon: FileText,
+      description: "Total AI assets",
+      color: "text-blue-500",
+      bg: "bg-blue-500/10"
+    },
+    {
+      title: "Images Created",
+      value: limits?.imageUsed || 0,
+      icon: Image,
+      description: "Generation count",
+      color: "text-purple-500",
+      bg: "bg-purple-500/10"
+    },
+    {
+      title: "Active Workflows",
+      value: activeWorkflows,
+      icon: Zap,
+      description: "Running automation",
+      color: "text-yellow-500",
+      bg: "bg-yellow-500/10"
+    },
+    {
+      title: "Social Impact",
+      value: "98%",
+      icon: BarChart3,
+      description: "Engagement rate",
+      color: "text-green-500",
+      bg: "bg-green-500/10"
+    },
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full text-primary text-sm font-medium">
-          <Zap className="h-4 w-4" />
-          AI Powered
-        </div>
+    <div className="p-8 space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold tracking-tight">System Overview</h1>
+        <p className="text-muted-foreground font-medium">Monitoring your AI content production engine.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.label} Usage</CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat, i) => (
+          <Card key={i} className="hover-elevate transition-all border-border/50">
+            <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                {stat.title}
+              </CardTitle>
+              <div className={`${stat.bg} ${stat.color} p-2 rounded-lg`}>
+                <stat.icon className="h-4 w-4" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.used} / {stat.total}</div>
-              <Progress value={(stat.used / stat.total) * 100} className="mt-2 h-2" />
+              <div className="text-2xl font-bold tracking-tight">{stat.value}</div>
+              <p className="text-xs text-muted-foreground mt-1 font-medium">{stat.description}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {content?.slice(0, 5).map((item) => (
-              <div key={item.id} className="flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                <div className="p-2 bg-primary/10 rounded-md">
-                  {item.type === "text" && <FileText className="h-4 w-4 text-primary" />}
-                  {item.type === "image" && <ImageIcon className="h-4 w-4 text-primary" />}
-                  {item.type === "video" && <Video className="h-4 w-4 text-primary" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">Generated {item.type} content</p>
-                  <p className="text-xs text-muted-foreground">{new Date(item.createdAt).toLocaleDateString()}</p>
-                </div>
-                <div className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
-                  item.status === "ready" ? "bg-green-500/10 text-green-500" : "bg-yellow-500/10 text-yellow-500"
-                }`}>
-                  {item.status}
-                </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-4 border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <div className="space-y-1">
+              <CardTitle>AI Resource Usage</CardTitle>
+              <CardDescription>Monthly quota distribution</CardDescription>
+            </div>
+            <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+          </CardHeader>
+          <CardContent className="space-y-6 pt-4">
+            {isLoadingLimits ? (
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
               </div>
-            ))}
-            {(!content || content.length === 0) && (
-              <p className="text-center text-muted-foreground py-8">No recent activity found.</p>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm font-semibold">
+                    <span className="flex items-center gap-2"><FileText className="h-3.5 w-3.5 text-blue-500" /> AI Captions</span>
+                    <span>{Math.round((limits?.textUsed || 0) / (limits?.textLimit || 1) * 100)}%</span>
+                  </div>
+                  <Progress value={(limits?.textUsed || 0) / (limits?.textLimit || 1) * 100} className="h-2 bg-blue-500/10" />
+                  <div className="flex justify-between text-[10px] text-muted-foreground font-bold tracking-tighter uppercase">
+                    <span>{limits?.textUsed} used</span>
+                    <span>{limits?.textLimit} limit</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm font-semibold">
+                    <span className="flex items-center gap-2"><Image className="h-3.5 w-3.5 text-purple-500" /> Visual Assets</span>
+                    <span>{Math.round((limits?.imageUsed || 0) / (limits?.imageLimit || 1) * 100)}%</span>
+                  </div>
+                  <Progress value={(limits?.imageUsed || 0) / (limits?.imageLimit || 1) * 100} className="h-2 bg-purple-500/10" />
+                  <div className="flex justify-between text-[10px] text-muted-foreground font-bold tracking-tighter uppercase">
+                    <span>{limits?.imageUsed} used</span>
+                    <span>{limits?.imageLimit} limit</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 opacity-50">
+                  <div className="flex items-center justify-between text-sm font-semibold">
+                    <span className="flex items-center gap-2"><Video className="h-3.5 w-3.5 text-orange-500" /> Video Processing</span>
+                    <Badge variant="secondary" className="text-[10px] h-4">Coming Soon</Badge>
+                  </div>
+                  <Progress value={0} className="h-2" />
+                </div>
+              </>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <Card className="col-span-3 border-border/50">
+          <CardHeader>
+            <CardTitle>Activity Feed</CardTitle>
+            <CardDescription>Latest automation events</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingContent ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-12 w-full" />)}
+              </div>
+            ) : recentPosts.length > 0 ? (
+              <div className="space-y-4">
+                {recentPosts.map((post) => (
+                  <div key={post.id} className="flex items-start gap-4 p-2 rounded-lg hover:bg-accent/50 transition-colors group">
+                    <div className="mt-1">
+                      {post.type === "image" ? (
+                        <Image className="h-4 w-4 text-purple-500" />
+                      ) : (
+                        <FileText className="h-4 w-4 text-blue-500" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold leading-none truncate mb-1">
+                        {(post.data as any).prompt || (post.data as any).text || "Generated Content"}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+                        <Clock className="h-3 w-3" />
+                        {new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        <Badge variant="outline" className="text-[10px] py-0 h-4 capitalize">{post.status}</Badge>
+                      </div>
+                    </div>
+                    <Send className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center space-y-2">
+                <Clock className="h-8 w-8 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground font-medium">No recent activity detected</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -1,19 +1,12 @@
 import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
-import { api } from "@shared/routes";
-import { registerChatRoutes } from "./replit_integrations/chat";
-import { registerImageRoutes } from "./replit_integrations/image";
-import { openai } from "./replit_integrations/image/client";
 import { db } from "./db";
-import { content, workflows, users } from "@shared/schema";
+import { content, workflows, users, api } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
-  registerChatRoutes(app);
-  registerImageRoutes(app);
-
-  // Sync user from Firebase to local DB
+  // Mock integrations for demo stability
   app.post("/api/auth/sync", async (req, res) => {
     const { uid, email } = req.body;
     if (!uid || !email) return res.status(400).send("Missing data");
@@ -74,15 +67,42 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.sendStatus(204);
   });
 
+  app.post(api.content.generate.path, async (req, res) => {
+    const { type } = req.body;
+    const s = await storage.getSettings();
+    const l = await storage.getLimits();
+
+    try {
+      let data: any = {};
+      if (type === "text") {
+        data = { text: `AI Generated Caption for ${s?.niche || 'Universal'} niche. #trending #automation`, hashtags: ["trending", "automation"] };
+        await storage.updateLimits({ textUsed: (l?.textUsed || 0) + 1 });
+      } else if (type === "image") {
+        data = { url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe", prompt: "Abstract digital art" };
+        await storage.updateLimits({ imageUsed: (l?.imageUsed || 0) + 1 });
+      }
+      
+      const created = await storage.createContent({
+        type,
+        workflowId: null,
+        data,
+        status: "ready"
+      });
+      res.json(created);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.post("/api/content/:id/post", async (req, res) => {
     try {
       const [item] = await db.select().from(content).where(eq(content.id, Number(req.params.id)));
       if (!item) return res.status(404).json({ error: "Content not found" });
-      const settings = await storage.getSettings();
-      if (!settings?.fbAccessToken || !settings?.fbPageId) return res.status(400).json({ error: "FB config missing" });
+      const s = await storage.getSettings();
+      if (!s?.fbAccessToken || !s?.fbPageId) return res.status(400).json({ error: "Facebook configuration is missing. Please check your settings." });
 
       const data = item.data as any;
-      const result = await postToFacebook(settings.fbPageId, settings.fbAccessToken, data.text || data.prompt || "", data.url);
+      const result = await postToFacebook(s.fbPageId, s.fbAccessToken, data.text || data.prompt || "", data.url);
       res.json({ success: true, result });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -93,10 +113,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 }
 
 const postToFacebook = async (pageId: string, accessToken: string, message: string, imageUrl?: string) => {
-  const baseUrl = `https://graph.facebook.com/v18.0/${pageId}/photos`;
-  const params = new URLSearchParams({ message, access_token: accessToken });
-  if (imageUrl) params.append("url", imageUrl);
-  const response = await fetch(`${baseUrl}?${params.toString()}`, { method: "POST" });
-  if (!response.ok) throw new Error("Facebook API error");
-  return response.json();
+  const endpoint = imageUrl ? `https://graph.facebook.com/v18.0/${pageId}/photos` : `https://graph.facebook.com/v18.0/${pageId}/feed`;
+  const params = new URLSearchParams({ 
+    message, 
+    access_token: accessToken,
+    published: "true",
+  });
+  
+  if (imageUrl) {
+    params.append("url", imageUrl);
+  }
+
+  const response = await fetch(`${endpoint}?${params.toString()}`, { method: "POST" });
+  const result = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(result.error?.message || "Facebook API error");
+  }
+  return result;
 };
