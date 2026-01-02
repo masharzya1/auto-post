@@ -10,7 +10,8 @@ import { loginWithGoogle } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { apiRequest } from "./lib/queryClient";
 
 import Dashboard from "@/pages/dashboard";
 import SettingsPage from "@/pages/settings";
@@ -21,6 +22,13 @@ import NotFound from "@/pages/not-found";
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      // Sync user to backend when authenticated
+      apiRequest("POST", "/api/auth/sync", { uid: user.uid, email: user.email });
+    }
+  }, [user]);
 
   const handleLogin = async () => {
     setIsSigningIn(true);
@@ -35,13 +43,11 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (loading || isSigningIn) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground animate-pulse">
-            {isSigningIn ? "Signing you in..." : "Connecting to Firebase..."}
-          </p>
-        </div>
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-background gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground animate-pulse">
+          {isSigningIn ? "Signing you in..." : "Authenticating..."}
+        </p>
       </div>
     );
   }
@@ -49,41 +55,34 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md shadow-lg border-2">
-          <CardHeader className="text-center space-y-2">
+        <Card className="w-full max-w-md shadow-xl border-2">
+          <CardHeader className="text-center space-y-2 pb-8">
             <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
               <Sparkles className="h-8 w-8 text-primary" />
             </div>
             <CardTitle className="text-3xl font-bold tracking-tight">AI Content Automator</CardTitle>
             <p className="text-muted-foreground">
-              Your intelligent social media companion
+              Login to access your automated content engine
             </p>
           </CardHeader>
-          <CardContent className="flex flex-col gap-6 pt-4">
-            <div className="space-y-4 text-sm">
-              <div className="flex items-center gap-3">
-                <div className="h-2 w-2 rounded-full bg-primary" />
-                <p>Generate high-quality niche content with AI</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="h-2 w-2 rounded-full bg-primary" />
-                <p>Schedule posts to Facebook automatically</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="h-2 w-2 rounded-full bg-primary" />
-                <p>Monitor AI usage and analytics</p>
-              </div>
-            </div>
+          <CardContent className="flex flex-col gap-6 pt-0">
             <Button 
               onClick={handleLogin} 
-              className="w-full h-12 text-lg font-semibold hover-elevate" 
+              className="w-full h-14 text-lg font-bold hover-elevate shadow-sm" 
               data-testid="button-login"
             >
               Sign in with Google
             </Button>
-            <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest font-medium">
-              Enterprise Ready • Secure • AI Powered
-            </p>
+            <div className="space-y-4 pt-4 border-t border-dashed text-sm text-muted-foreground">
+              <div className="flex items-center gap-3">
+                <div className="h-1 w-1 rounded-full bg-primary" />
+                <p>Automated AI Image & Text Generation</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-1 w-1 rounded-full bg-primary" />
+                <p>Smart Scheduling & Facebook Posting</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

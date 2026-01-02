@@ -17,7 +17,7 @@ export const settings = pgTable("settings", {
   captionModel: text("caption_model").default("gpt-5").notNull(),
   videoModel: text("video_model").default("next-gen-video").notNull(),
   
-  // API Keys (Stored as encrypted strings or handled via Secrets in Replit)
+  // API Keys
   fbAccessToken: text("fb_access_token"),
   openaiApiKey: text("openai_api_key"),
   geminiApiKey: text("gemini_api_key"),
@@ -43,7 +43,7 @@ export const workflows = pgTable("workflows", {
   enabled: boolean("enabled").default(true).notNull(),
   lastRun: timestamp("last_run"),
   status: text("status").default("idle").notNull(),
-  cronSchedule: text("cron_schedule").default("0 9 * * *").notNull(), // Default 9 AM daily
+  cronSchedule: text("cron_schedule").default("0 9 * * *").notNull(),
 });
 
 // Generated Content
@@ -56,14 +56,24 @@ export const content = pgTable("content", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Users table for local session backup
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  firebaseUid: text("firebase_uid").notNull().unique(),
+  email: text("email").notNull(),
+  lastLogin: timestamp("last_login").defaultNow().notNull(),
+});
+
 export const insertSettingsSchema = createInsertSchema(settings).omit({ id: true });
 export const insertLimitsSchema = createInsertSchema(limits).omit({ id: true });
 export const insertWorkflowSchema = createInsertSchema(workflows).omit({ id: true, lastRun: true });
 export const insertContentSchema = createInsertSchema(content).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, lastLogin: true });
 
 export type Settings = typeof settings.$inferSelect;
 export type Limits = typeof limits.$inferSelect;
 export type Workflow = typeof workflows.$inferSelect;
 export type Content = typeof content.$inferSelect;
+export type User = typeof users.$inferSelect;
 
 export * from "./models/chat";

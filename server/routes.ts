@@ -6,12 +6,26 @@ import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { openai } from "./replit_integrations/image/client";
 import { db } from "./db";
-import { content, workflows } from "@shared/schema";
+import { content, workflows, users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   registerChatRoutes(app);
   registerImageRoutes(app);
+
+  // Sync user from Firebase to local DB
+  app.post("/api/auth/sync", async (req, res) => {
+    const { uid, email } = req.body;
+    if (!uid || !email) return res.status(400).send("Missing data");
+    
+    const [existing] = await db.select().from(users).where(eq(users.firebaseUid, uid));
+    if (existing) {
+      const [updated] = await db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, existing.id)).returning();
+      return res.json(updated);
+    }
+    const [created] = await db.insert(users).values({ firebaseUid: uid, email }).returning();
+    res.json(created);
+  });
 
   app.get(api.settings.get.path, async (req, res) => {
     const s = await storage.getSettings();
@@ -60,16 +74,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.sendStatus(204);
   });
 
-  // Facebook APIs
-  const postToFacebook = async (pageId: string, accessToken: string, message: string, imageUrl?: string) => {
-    const baseUrl = `https://graph.facebook.com/v18.0/${pageId}/photos`;
-    const params = new URLSearchParams({ message, access_token: accessToken });
-    if (imageUrl) params.append("url", imageUrl);
-    const response = await fetch(`${baseUrl}?${params.toString()}`, { method: "POST" });
-    if (!response.ok) throw new Error("Facebook API error");
-    return response.json();
-  };
-
   app.post("/api/content/:id/post", async (req, res) => {
     try {
       const [item] = await db.select().from(content).where(eq(content.id, Number(req.params.id)));
@@ -85,54 +89,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  // Auto-Responder logic
-  app.post("/api/fb/webhooks", async (req, res) => {
-    const { entry } = req.body;
-    if (entry?.[0]?.changes?.[0]?.field === "comments") {
-      const comment = entry[0].changes[0].value;
-      const settings = await storage.getSettings();
-      if (settings?.fbAccessToken) {
-        const aiResponse = await openai.chat.completions.create({
-          model: "gpt-5",
-          messages: [{ role: "system", content: "You are a friendly social media assistant." }, { role: "user", content: `Reply to: ${comment.message}` }],
-        });
-        await fetch(`https://graph.facebook.com/v18.0/${comment.comment_id}/comments`, {
-          method: "POST",
-          body: JSON.stringify({ message: aiResponse.choices[0].message.content, access_token: settings.fbAccessToken }),
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-    }
-    res.sendStatus(200);
-  });
-
-  app.post(api.content.generate.path, async (req, res) => {
-    const { type } = req.body;
-    const settings = await storage.getSettings();
-    const niche = settings?.niche || "General";
-    
-    try {
-      let generatedData = {};
-      if (type === "text") {
-        const response = await openai.chat.completions.create({
-          model: settings?.captionModel || "gpt-5",
-          messages: [{ role: "user", content: `Write a social media post for ${niche} niche. Include trending niche hashtags.` }],
-        });
-        generatedData = { text: response.choices[0].message.content };
-      } else if (type === "image") {
-        const response = await openai.images.generate({
-          model: "gpt-image-1",
-          prompt: `Professional ${niche} niche social media image.`,
-        });
-        generatedData = { url: response.data?.[0]?.url, prompt: response.data?.[0]?.revised_prompt };
-      }
-
-      const c = await storage.createContent({ type, data: generatedData, status: "ready" });
-      res.json(c);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
   return httpServer;
 }
+
+const postToFacebook = async (pageId: string, accessToken: string, message: string, imageUrl?: string) => {
+  const baseUrl = `https://graph.facebook.com/v18.0/${pageId}/photos`;
+  const params = new URLSearchParams({ message, access_token: accessToken });
+  if (imageUrl) params.append("url", imageUrl);
+  const response = await fetch(`${baseUrl}?${params.toString()}`, { method: "POST" });
+  if (!response.ok) throw new Error("Facebook API error");
+  return response.json();
+};
