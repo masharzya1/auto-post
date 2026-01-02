@@ -1,0 +1,65 @@
+19:11:42.278 Running build in Washington, D.C., USA (East) – iad1
+19:11:42.287 Build machine configuration: 2 cores, 8 GB
+19:11:42.574 Cloning github.com/masharzya1/auto-post (Branch: main, Commit: 8f8f794)
+19:11:43.748 Cloning completed: 1.174s
+19:11:44.159 Restored build cache from previous deployment (51oaFMhhUjmmQs4ycKRf9Q1wdo8S)
+19:11:45.043 Running "vercel build"
+19:11:45.491 Vercel CLI 50.1.3
+19:11:45.626 WARN! Due to `builds` existing in your configuration file, the Build and Development Settings defined in your Project Settings will not apply. Learn More: https://vercel.link/unused-build-settings
+19:11:46.111 Installing dependencies...
+19:11:52.586 
+19:11:52.586 added 131 packages, removed 69 packages, and changed 149 packages in 6s
+19:11:52.587 
+19:11:52.587 73 packages are looking for funding
+19:11:52.587   run `npm fund` for details
+19:11:52.632 Running "npm run vercel-build"
+19:11:52.730 
+19:11:52.731 > rest-express@1.0.0 vercel-build
+19:11:52.731 > vite build && tsx script/build.ts
+19:11:52.731 
+19:11:53.245 [36mvite v7.3.0 [32mbuilding client environment for production...[36m[39m
+19:11:53.618 transforming...
+19:11:54.715 
+19:11:54.716 A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+19:11:58.336 [32m✓[39m 1867 modules transformed.
+19:11:58.747 rendering chunks...
+19:11:58.759 computing gzip size...
+19:11:58.781 [2m../dist/public/[22m[32mindex.html                 [39m[1m[2m  2.01 kB[22m[1m[22m[2m │ gzip:   0.77 kB[22m
+19:11:58.782 [2m../dist/public/[22m[2massets/[22m[35mindex-KI29wee7.css  [39m[1m[2m 75.49 kB[22m[1m[22m[2m │ gzip:  12.11 kB[22m
+19:11:58.782 [2m../dist/public/[22m[2massets/[22m[36mindex-Bbm9AU_7.js   [39m[1m[33m610.62 kB[39m[22m[2m │ gzip: 186.06 kB[22m
+19:11:58.785 [32m✓ built in 5.50s[39m
+19:11:58.786 [33m
+19:11:58.786 (!) Some chunks are larger than 500 kB after minification. Consider:
+19:11:58.786 - Using dynamic import() to code-split the application
+19:11:58.786 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+19:11:58.787 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+19:12:00.773 building client...
+19:12:00.888 [36mvite v7.3.0 [32mbuilding client environment for production...[36m[39m
+19:12:01.256 transforming...
+19:12:02.455 
+19:12:02.456 A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+19:12:05.740 [32m✓[39m 1867 modules transformed.
+19:12:06.392 rendering chunks...
+19:12:06.404 computing gzip size...
+19:12:06.425 [2m../dist/public/[22m[32mindex.html                 [39m[1m[2m  2.01 kB[22m[1m[22m[2m │ gzip:   0.77 kB[22m
+19:12:06.425 [2m../dist/public/[22m[2massets/[22m[35mindex-KI29wee7.css  [39m[1m[2m 75.49 kB[22m[1m[22m[2m │ gzip:  12.11 kB[22m
+19:12:06.426 [2m../dist/public/[22m[2massets/[22m[36mindex-Bbm9AU_7.js   [39m[1m[33m610.62 kB[39m[22m[2m │ gzip: 186.06 kB[22m
+19:12:06.427 [33m
+19:12:06.427 (!) Some chunks are larger than 500 kB after minification. Consider:
+19:12:06.427 - Using dynamic import() to code-split the application
+19:12:06.427 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+19:12:06.427 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+19:12:06.428 [32m✓ built in 5.23s[39m
+19:12:06.428 building server...
+19:12:06.726 
+19:12:06.726   dist/index.cjs  1.1mb ⚠️
+19:12:06.726 
+19:12:06.726 ⚡ Done in 265ms
+19:12:07.064 Using TypeScript 5.6.3 (local user-provided)
+19:12:19.691 Build Completed in /vercel/output [34s]
+19:12:20.065 Deploying outputs...
+19:12:26.174 Deployment completed
+19:12:27.132 Creating build cache...
+19:12:45.219 Created build cache: 18.082s
+19:12:45.219 Uploading build cache [100.87 MB]
+19:12:47.050 Build cache uploaded: 1.834s
