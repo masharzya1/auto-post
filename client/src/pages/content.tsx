@@ -61,6 +61,14 @@ export default function ContentPage() {
       const niche = settings?.niche || "General";
       const model = type === "text" ? settings?.captionModel : settings?.photoModel;
       
+      if (!model) throw new Error("No model selected in settings");
+
+      const apiKey = model.includes("gpt") ? settings?.openaiApiKey : 
+                    model.includes("claude") ? settings?.claudeApiKey : 
+                    settings?.geminiApiKey;
+
+      if (!apiKey) throw new Error("API Key required for " + model);
+
       let data;
       if (type === "text") {
         // Direct AI call for text
