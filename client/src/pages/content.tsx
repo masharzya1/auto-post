@@ -4,19 +4,19 @@ import { Button } from "@/components/ui/button";
 import { type Content } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, FileText, Image as ImageIcon, Video, Eye, Send, Trash2, Sparkles } from "lucide-react";
+import { Loader2, Plus, FileText, Image as ImageIcon, Video, Eye, Send, Trash2, Sparkles, Edit2, Save } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { db, auth } from "@/lib/firebase";
 import { collection, getDocs, query, where, addDoc, deleteDoc, doc, updateDoc, getDoc, onSnapshot } from "firebase/firestore";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { type Settings } from "@shared/schema";
-import OpenAI from "openai";
-import { Anthropic } from "@anthropic-ai/sdk";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default function ContentPage() {
   const { toast } = useToast();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editedText, setEditedText] = useState("");
   
   const { data: content, isLoading } = useQuery<Content[]>({ 
     queryKey: ["content"],
@@ -27,9 +27,6 @@ export default function ContentPage() {
         const unsubscribe = onSnapshot(q, (snap) => {
           resolve(snap.docs.map(doc => ({ ...doc.data(), id: doc.id }) as any));
         }, reject);
-        // TanStack query needs a promise, but onSnapshot is a listener.
-        // For real-time with TanStack, it's better to use useSyncExternalStore or a custom hook.
-        // However, for a quick fix, we'll use onSnapshot to update the cache.
       });
     }
   });
@@ -101,15 +98,79 @@ export default function ContentPage() {
     },
   });
 
-  const postMutation = useMutation({
-    mutationFn: async (id: string) => {
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, text }: { id: string; text: string }) => {
       if (!db) return;
-      await updateDoc(doc(db, "content", id), { status: "deployed" });
+      const contentDoc = await getDoc(doc(db, "content", id));
+      const currentData = contentDoc.data();
+      await updateDoc(doc(db, "content", id), { 
+        data: { ...currentData?.data, text } 
+      });
     },
     onSuccess: () => {
+      setEditingId(null);
       queryClient.invalidateQueries({ queryKey: ["content"] });
-      toast({ title: "Content deployed to social media!" });
+      toast({ title: "Content updated!" });
     },
+  });
+
+  const postMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!db || !auth?.currentUser) throw new Error("Not authenticated");
+      
+      // Get content
+      const contentDoc = await getDoc(doc(db, "content", id));
+      const contentData = contentDoc.data();
+      
+      if (!contentData) throw new Error("Content not found");
+      
+      // Get settings for FB credentials
+      const settingsDoc = await getDoc(doc(db, "settings", auth.currentUser.uid));
+      const settingsData = settingsDoc.data();
+      
+      if (!settingsData?.fbPageId || !settingsData?.fbAccessToken) {
+        throw new Error("Facebook Page ID and Access Token required in Settings");
+      }
+
+      // Post to Facebook
+      const response = await fetch("/api/facebook-post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pageId: settingsData.fbPageId,
+          accessToken: settingsData.fbAccessToken,
+          message: contentData.data.text,
+          imageUrl: contentData.data.url,
+          hashtags: contentData.data.hashtags
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Facebook posting failed");
+      }
+
+      const result = await response.json();
+      
+      // Update status
+      await updateDoc(doc(db, "content", id), { status: "deployed" });
+      
+      return result;
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["content"] });
+      toast({ 
+        title: "Posted to Facebook!", 
+        description: `Post ID: ${result.postId}` 
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Posting failed", 
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   if (isLoading) {
@@ -181,9 +242,9 @@ export default function ContentPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                  <Badge variant={item.status === "ready" ? "default" : "secondary"} className="text-[10px] h-5 capitalize">
-                    {item.workflowId ? "Auto" : "Manual"} • {item.status}
-                  </Badge>
+                <Badge variant={item.status === "ready" ? "default" : "secondary"} className="text-[10px] h-5 capitalize">
+                  {item.status}
+                </Badge>
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -206,45 +267,43 @@ export default function ContentPage() {
                   <img src={(item.data as any).url} alt="Generated" className="absolute inset-0 w-full h-full object-cover group-hover/preview:scale-105 transition-transform duration-500" />
                 ) : (
                   <div className="p-4 font-medium leading-relaxed italic">
-                    <p className="line-clamp-4">{(item.data as any).text || (item.data as any).prompt || "Processing AI visual..."}</p>
+                    {editingId === (item.id as unknown as string) ? (
+                      <Textarea 
+                        value={editedText}
+                        onChange={(e) => setEditedText(e.target.value)}
+                        className="min-h-[100px] text-xs"
+                      />
+                    ) : (
+                      <p className="line-clamp-4">{(item.data as any).text || (item.data as any).prompt || "Processing AI visual..."}</p>
+                    )}
                   </div>
                 )}
               </div>
               <div className="flex gap-2">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex-1 h-9 font-bold bg-background">
-                      <Eye className="h-3.5 w-3.5 mr-1.5" />
-                      Inspect
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl bg-white dark:bg-gray-950">
-                    <DialogHeader>
-                      <DialogTitle className="capitalize">{item.type} Details</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 pt-4">
-                      {item.type === "image" && (item.data as any).url ? (
-                        <div className="rounded-xl overflow-hidden border">
-                          <img src={(item.data as any).url} alt="Generated" className="w-full h-auto" />
-                        </div>
-                      ) : (
-                        <div className="p-6 rounded-xl bg-muted/30 border text-sm leading-relaxed whitespace-pre-wrap">
-                          {(item.data as any).text || (item.data as any).prompt}
-                        </div>
-                      )}
-                      <div className="grid grid-cols-2 gap-4 text-xs">
-                        <div className="p-3 rounded-lg bg-muted/20">
-                          <p className="text-muted-foreground mb-1 uppercase tracking-wider font-bold">Status</p>
-                          <p className="font-semibold capitalize">{item.status}</p>
-                        </div>
-                        <div className="p-3 rounded-lg bg-muted/20">
-                          <p className="text-muted-foreground mb-1 uppercase tracking-wider font-bold">Created At</p>
-                          <p className="font-semibold">{new Date(item.createdAt).toLocaleString()}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                {editingId === (item.id as unknown as string) ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 h-9 font-bold"
+                    onClick={() => updateMutation.mutate({ id: item.id as unknown as string, text: editedText })}
+                  >
+                    <Save className="h-3.5 w-3.5 mr-1.5" />
+                    Save
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 h-9 font-bold bg-background"
+                    onClick={() => {
+                      setEditingId(item.id as unknown as string);
+                      setEditedText((item.data as any).text || "");
+                    }}
+                  >
+                    <Edit2 className="h-3.5 w-3.5 mr-1.5" />
+                    Edit
+                  </Button>
+                )}
                 <Button 
                   variant="default" 
                   size="sm" 
@@ -253,7 +312,7 @@ export default function ContentPage() {
                   onClick={() => postMutation.mutate((item.id as unknown as string))}
                 >
                   {postMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Send className="h-3.5 w-3.5 mr-1.5" />}
-                  Deploy
+                  Post to FB
                 </Button>
               </div>
             </CardContent>
