@@ -14,11 +14,12 @@ import { Loader2, Save, Key, Cpu, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { db, auth } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { MODELS } from "@/lib/constants";
 
 export default function SettingsPage() {
   const { toast } = useToast();
   
-  const { data: settings, isLoading } = useQuery<Settings>({ 
+  const { data: settings, isLoading } = useQuery<Settings | null>({ 
     queryKey: ["settings"],
     queryFn: async () => {
       if (!db || !auth?.currentUser) return null;
@@ -28,7 +29,7 @@ export default function SettingsPage() {
     }
   });
 
-  const form = useForm({
+  const form = useForm<Settings>({
     resolver: zodResolver(insertSettingsSchema),
     values: settings || {
       fbPageId: "",
@@ -44,7 +45,7 @@ export default function SettingsPage() {
       openaiApiKey: "",
       geminiApiKey: "",
       claudeApiKey: "",
-    },
+    } as any,
   });
 
   const mutation = useMutation({

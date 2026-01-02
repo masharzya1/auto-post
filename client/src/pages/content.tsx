@@ -8,7 +8,7 @@ import { Loader2, Plus, FileText, Image as ImageIcon, Video, Eye, Send, Trash2, 
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { db, auth } from "@/lib/firebase";
-import { collection, getDocs, query, where, addDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, where, addDoc, deleteDoc, doc, updateDoc } from "firebase/firestore";
 
 export default function ContentPage() {
   const { toast } = useToast();
@@ -47,14 +47,14 @@ export default function ContentPage() {
     },
   });
 
-  const deleteMutation = useMutation({
+  const postMutation = useMutation({
     mutationFn: async (id: string) => {
       if (!db) return;
-      await deleteDoc(doc(db, "content", id));
+      await updateDoc(doc(db, "content", id), { status: "deployed" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["content"] });
-      toast({ title: "Content removed" });
+      toast({ title: "Content deployed to social media!" });
     },
   });
 
@@ -134,7 +134,13 @@ export default function ContentPage() {
                   variant="ghost" 
                   size="icon" 
                   className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() => deleteMutation.mutate(item.id)}
+                  onClick={() => {
+                    if (!db) return;
+                    deleteDoc(doc(db, "content", (item.id as unknown as string))).then(() => {
+                      queryClient.invalidateQueries({ queryKey: ["content"] });
+                      toast({ title: "Content removed" });
+                    });
+                  }}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -190,7 +196,7 @@ export default function ContentPage() {
                   size="sm" 
                   className="flex-1 h-9 font-bold shadow-sm" 
                   disabled={item.status !== "ready" || postMutation.isPending}
-                  onClick={() => postMutation.mutate(item.id)}
+                  onClick={() => postMutation.mutate((item.id as unknown as string))}
                 >
                   {postMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Send className="h-3.5 w-3.5 mr-1.5" />}
                   Deploy
