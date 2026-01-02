@@ -31,16 +31,16 @@ export const workflows = pgTable("workflows", {
   name: text("name").notNull(),
   enabled: boolean("enabled").default(true).notNull(),
   lastRun: timestamp("last_run"),
-  status: text("status").default("idle").notNull(), // idle, scheduled, ready, limit_reached
+  status: text("status").default("idle").notNull(),
 });
 
-// Generated Content (for review before rendering)
+// Generated Content
 export const content = pgTable("content", {
   id: serial("id").primaryKey(),
   workflowId: integer("workflow_id").references(() => workflows.id),
-  type: text("type").notNull(), // text, image, video
-  data: jsonb("data").notNull(), // script, image prompt, etc.
-  status: text("status").default("pending").notNull(), // pending, ready, rendered
+  type: text("type").notNull(),
+  data: jsonb("data").notNull(),
+  status: text("status").default("pending").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

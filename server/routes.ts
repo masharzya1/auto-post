@@ -21,7 +21,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.get(api.limits.get.path, async (req, res) => {
     const l = await storage.getLimits();
-    res.json(l || {});
+    res.json(l || { textLimit: 100, imageLimit: 50, videoLimit: 10, textUsed: 0, imageUsed: 0, videoUsed: 0 });
   });
 
   app.post(api.limits.update.path, async (req, res) => {
@@ -44,11 +44,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(c);
   });
 
-  // Basic seed function
-  const ws = await storage.getWorkflows();
-  if (ws.length === 0) {
-    await storage.createContent({ type: "text", data: { title: "Welcome" }, status: "ready" });
-  }
+  app.post(api.content.generate.path, async (req, res) => {
+    const { type } = req.body;
+    const c = await storage.createContent({ 
+      type, 
+      data: { prompt: `Generated ${type} content` }, 
+      status: "ready" 
+    });
+    res.json(c);
+  });
 
   return httpServer;
 }

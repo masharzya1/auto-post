@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { loginWithGoogle } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 
 import Dashboard from "@/pages/dashboard";
 import SettingsPage from "@/pages/settings";
@@ -31,17 +31,37 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center">AI Content Automator</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <p className="text-center text-muted-foreground">
-              Sign in to manage your AI workflows and automate your social media content.
+        <Card className="w-full max-w-md shadow-lg border-2">
+          <CardHeader className="text-center space-y-2">
+            <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
+              <Sparkles className="h-8 w-8 text-primary" />
+            </div>
+            <CardTitle className="text-3xl font-bold tracking-tight">AI Content Automator</CardTitle>
+            <p className="text-muted-foreground">
+              Your intelligent social media companion
             </p>
-            <Button onClick={loginWithGoogle} className="w-full" size="lg" data-testid="button-login">
+          </CardHeader>
+          <CardContent className="flex flex-col gap-6 pt-4">
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 text-sm">
+                <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center mt-0.5">1</div>
+                <p>Generate high-quality niche content with AI</p>
+              </div>
+              <div className="flex items-start gap-3 text-sm">
+                <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center mt-0.5">2</div>
+                <p>Schedule posts to Facebook and YouTube automatically</p>
+              </div>
+              <div className="flex items-start gap-3 text-sm">
+                <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center mt-0.5">3</div>
+                <p>Monitor your AI usage and performance</p>
+              </div>
+            </div>
+            <Button onClick={loginWithGoogle} className="w-full hover-elevate py-6 text-lg" size="lg" data-testid="button-login">
               Sign in with Google
             </Button>
+            <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest">
+              Powered by Replit AI & Firebase
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -77,12 +97,12 @@ export default function App() {
             <div className="flex h-screen w-full overflow-hidden">
               <AppSidebar />
               <div className="flex flex-col flex-1 min-w-0">
-                <header className="flex items-center gap-2 p-2 border-b h-14 shrink-0">
+                <header className="flex items-center gap-2 p-2 border-b h-14 shrink-0 px-4">
                   <SidebarTrigger data-testid="button-sidebar-toggle" />
                   <div className="h-4 w-[1px] bg-border mx-2" />
-                  <h2 className="text-sm font-medium truncate">AI Content Automation</h2>
+                  <h2 className="text-sm font-semibold tracking-tight truncate">AI Content Automation</h2>
                 </header>
-                <main className="flex-1 overflow-y-auto">
+                <main className="flex-1 overflow-y-auto bg-slate-50/30 dark:bg-zinc-950/30">
                   <Router />
                 </main>
               </div>
