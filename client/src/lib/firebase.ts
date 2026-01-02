@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -14,18 +14,32 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
+// Standardize Google provider
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
+
 // Ensure session persistence
 setPersistence(auth, browserLocalPersistence);
 
-export const loginWithGoogle = () => signInWithRedirect(auth, googleProvider);
-export const logout = () => auth.signOut();
-
-export const handleAuthRedirect = async () => {
+export const loginWithGoogle = async () => {
   try {
-    const result = await getRedirectResult(auth);
-    return result?.user;
-  } catch (error) {
-    console.error("Firebase auth redirect error:", error);
-    return null;
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
+  } catch (error: any) {
+    console.error("Firebase popup sign-in error:", error);
+    // Handle common errors
+    if (error.code === 'auth/popup-blocked') {
+      alert("Please enable popups to sign in with Google.");
+    } else if (error.code === 'auth/cancelled-popup-request') {
+      // User closed the popup, no action needed
+    } else {
+      alert(`Sign-in error: ${error.message}`);
+    }
+    throw error;
   }
 };
+
+export const logout = () => auth.signOut();
+
+export const handleAuthRedirect = () => Promise.resolve(null);

@@ -6,11 +6,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { useAuth } from "@/hooks/use-auth";
-import { loginWithGoogle, handleAuthRedirect } from "@/lib/firebase";
+import { loginWithGoogle } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Sparkles } from "lucide-react";
-import { useEffect } from "react";
+import { useState } from "react";
 
 import Dashboard from "@/pages/dashboard";
 import SettingsPage from "@/pages/settings";
@@ -20,21 +20,28 @@ import NotFound from "@/pages/not-found";
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
-  useEffect(() => {
-    const checkRedirect = async () => {
-      const user = await handleAuthRedirect();
-      if (user) {
-        // Redirect handled, onAuthStateChanged will pick up the user
-      }
-    };
-    checkRedirect();
-  }, []);
+  const handleLogin = async () => {
+    setIsSigningIn(true);
+    try {
+      await loginWithGoogle();
+    } catch (error) {
+      console.error("Login component error:", error);
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
 
-  if (loading) {
+  if (loading || isSigningIn) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground animate-pulse">
+            {isSigningIn ? "Signing you in..." : "Connecting to Firebase..."}
+          </p>
+        </div>
       </div>
     );
   }
@@ -53,25 +60,29 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
             </p>
           </CardHeader>
           <CardContent className="flex flex-col gap-6 pt-4">
-            <div className="space-y-4">
-              <div className="flex items-start gap-3 text-sm">
-                <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center mt-0.5">1</div>
+            <div className="space-y-4 text-sm">
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-primary" />
                 <p>Generate high-quality niche content with AI</p>
               </div>
-              <div className="flex items-start gap-3 text-sm">
-                <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center mt-0.5">2</div>
-                <p>Schedule posts to Facebook and YouTube automatically</p>
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-primary" />
+                <p>Schedule posts to Facebook automatically</p>
               </div>
-              <div className="flex items-start gap-3 text-sm">
-                <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center mt-0.5">3</div>
-                <p>Monitor your AI usage and performance</p>
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-primary" />
+                <p>Monitor AI usage and analytics</p>
               </div>
             </div>
-            <Button onClick={loginWithGoogle} className="w-full hover-elevate py-6 text-lg" size="lg" data-testid="button-login">
+            <Button 
+              onClick={handleLogin} 
+              className="w-full h-12 text-lg font-semibold hover-elevate" 
+              data-testid="button-login"
+            >
               Sign in with Google
             </Button>
-            <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest">
-              Powered by Replit AI & Firebase
+            <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest font-medium">
+              Enterprise Ready • Secure • AI Powered
             </p>
           </CardContent>
         </Card>
@@ -108,7 +119,7 @@ export default function App() {
             <div className="flex h-screen w-full overflow-hidden">
               <AppSidebar />
               <div className="flex flex-col flex-1 min-w-0">
-                <header className="flex items-center gap-2 p-2 border-b h-14 shrink-0 px-4">
+                <header className="flex items-center gap-2 p-2 border-b h-14 shrink-0 px-4 bg-background/50 backdrop-blur">
                   <SidebarTrigger data-testid="button-sidebar-toggle" />
                   <div className="h-4 w-[1px] bg-border mx-2" />
                   <h2 className="text-sm font-semibold tracking-tight truncate">AI Content Automation</h2>
