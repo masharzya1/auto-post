@@ -2,9 +2,6 @@
 
 To deploy this project successfully to Vercel, add these variables in your Vercel Project Settings:
 
-## Database (PostgreSQL)
-- `DATABASE_URL`: Your PostgreSQL connection string.
-
 ## Security
 - `SESSION_SECRET`: A random string (e.g., `openssl rand -base64 32`).
 
@@ -25,13 +22,5 @@ To deploy this project successfully to Vercel, add these variables in your Verce
 
 ### FAQ
 
-**Why do I need AI_INTEGRATIONS_OPENAI_API_KEY?**
-This is a fallback key. The app allows users to provide their own keys in the **Settings** page, which are stored in the database. If a user provides their own key, the app will use it. The environment variable is only used if no user key is available.
-
-**Why do I need DATABASE_URL if I use Firebase?**
-Firebase is used for **Authentication** (user identity). However, the app uses **PostgreSQL** to store:
-- User metadata and session links.
-- Application settings (API keys, niche, posting frequency).
-- AI Usage limits and tracking.
-- Workflow configurations and content history.
-Firebase handles who the user is; PostgreSQL handles what the app does for them.
+**Why don't I need a Database URL?**
+The app has been migrated to use **Firebase Firestore** exclusively. All data is stored in your Firebase project, so there is no need for a PostgreSQL database or a `DATABASE_URL`.
