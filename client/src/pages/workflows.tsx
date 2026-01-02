@@ -190,16 +190,31 @@ export default function WorkflowsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold">Niche (Override)</Label>
-                  <select 
-                    className="flex h-10 w-full rounded-md border border-muted-foreground/20 bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus:bg-background transition-colors"
-                    {...createForm.register("niche")}
-                  >
-                    <option value="">Use Global Niche</option>
-                    <option value="Motivation">Motivation</option>
-                    <option value="Tech">Tech</option>
-                    <option value="Health">Health</option>
-                    <option value="Finance">Finance</option>
-                  </select>
+                  <div className="space-y-2">
+                    <select 
+                      className="flex h-10 w-full rounded-md border border-muted-foreground/20 bg-white px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus:bg-background transition-colors"
+                      {...createForm.register("nicheSelect")}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        createForm.setValue("nicheSelect", val);
+                        if (val !== "Custom") createForm.setValue("niche", val);
+                      }}
+                    >
+                      <option value="">Use Global Niche</option>
+                      <option value="Motivation">Motivation</option>
+                      <option value="Tech">Tech</option>
+                      <option value="Health">Health</option>
+                      <option value="Finance">Finance</option>
+                      <option value="Custom">Custom Niche</option>
+                    </select>
+                    {createForm.watch("nicheSelect") === "Custom" && (
+                      <Input 
+                        placeholder="Enter custom niche..." 
+                        className="h-10 bg-white"
+                        {...createForm.register("niche")}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">

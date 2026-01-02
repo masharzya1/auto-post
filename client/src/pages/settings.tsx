@@ -109,20 +109,30 @@ export default function SettingsPage() {
           <CardContent className="space-y-8">
             <div className="space-y-3">
               <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Global Niche / Topic</Label>
-              <Select value={form.watch("niche")} onValueChange={(v) => form.setValue("niche", v)}>
-                <SelectTrigger className="h-11 bg-white">
-                  <SelectValue placeholder="Select Niche" />
-                </SelectTrigger>
-                <SelectContent className="bg-white">
-                  <SelectItem value="Motivation">Motivation & Success</SelectItem>
-                  <SelectItem value="Tech">Technology & AI</SelectItem>
-                  <SelectItem value="Health">Health & Fitness</SelectItem>
-                  <SelectItem value="Finance">Personal Finance</SelectItem>
-                  <SelectItem value="Travel">Travel & Adventure</SelectItem>
-                  <SelectItem value="Food">Food & Cooking</SelectItem>
-                  <SelectItem value="Gaming">Gaming & eSports</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select value={form.watch("niche")} onValueChange={(v) => form.setValue("niche", v)}>
+                  <SelectTrigger className="h-11 bg-white flex-1">
+                    <SelectValue placeholder="Select Niche" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="Motivation">Motivation & Success</SelectItem>
+                    <SelectItem value="Tech">Technology & AI</SelectItem>
+                    <SelectItem value="Health">Health & Fitness</SelectItem>
+                    <SelectItem value="Finance">Personal Finance</SelectItem>
+                    <SelectItem value="Travel">Travel & Adventure</SelectItem>
+                    <SelectItem value="Food">Food & Cooking</SelectItem>
+                    <SelectItem value="Gaming">Gaming & eSports</SelectItem>
+                    <SelectItem value="Custom">Custom Niche</SelectItem>
+                  </SelectContent>
+                </Select>
+                {form.watch("niche") === "Custom" && (
+                  <Input 
+                    placeholder="Enter custom niche..." 
+                    className="h-11 flex-1"
+                    onChange={(e) => form.setValue("niche", e.target.value)}
+                  />
+                )}
+              </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-3">
