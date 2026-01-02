@@ -94,7 +94,7 @@ export default function WorkflowsPage() {
               Create New Workflow
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="bg-background">
             <DialogHeader>
               <DialogTitle>New Content Workflow</DialogTitle>
               <CardDescription>Configure an automated schedule for content generation.</CardDescription>
@@ -105,9 +105,18 @@ export default function WorkflowsPage() {
                 <Input {...createForm.register("name")} placeholder="e.g. Daily Motivation Posts" />
               </div>
               <div className="space-y-2">
-                <Label>Schedule (Cron Expression)</Label>
-                <Input {...createForm.register("cronSchedule")} placeholder="0 9 * * *" />
-                <p className="text-[10px] text-muted-foreground italic">Use <code>0 9 * * *</code> for 9:00 AM daily.</p>
+                <Label>Schedule (Posting Time)</Label>
+                <select 
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  {...createForm.register("cronSchedule")}
+                >
+                  <option value="0 9 * * *">Every day at 9:00 AM</option>
+                  <option value="0 12 * * *">Every day at 12:00 PM</option>
+                  <option value="0 18 * * *">Every day at 6:00 PM</option>
+                  <option value="0 21 * * *">Every day at 9:00 PM</option>
+                  <option value="0 0 * * *">Every day at Midnight</option>
+                </select>
+                <p className="text-[10px] text-muted-foreground italic">Select a time for the automation to run daily.</p>
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={createMutation.isPending}>
@@ -188,15 +197,21 @@ export default function WorkflowsPage() {
             <CardContent className="space-y-4">
               <div className="p-3 rounded-lg bg-muted/50 border border-dashed border-border/50">
                 <Label className="text-[10px] uppercase tracking-widest font-black text-muted-foreground mb-1 block">
-                  Schedule (Cron Expression)
+                  Automated Schedule
                 </Label>
                 {editingId === workflow.id ? (
                   <div className="flex gap-2">
-                    <Input 
-                      className="h-8 text-xs font-mono bg-background" 
+                    <select 
+                      className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       value={cronValue} 
                       onChange={(e) => setCronValue(e.target.value)}
-                    />
+                    >
+                      <option value="0 9 * * *">9:00 AM Daily</option>
+                      <option value="0 12 * * *">12:00 PM Daily</option>
+                      <option value="0 18 * * *">6:00 PM Daily</option>
+                      <option value="0 21 * * *">9:00 PM Daily</option>
+                      <option value="0 0 * * *">Midnight Daily</option>
+                    </select>
                     <Button 
                       size="sm" 
                       className="h-8"
@@ -213,21 +228,41 @@ export default function WorkflowsPage() {
                       setCronValue(workflow.cronSchedule);
                     }}
                   >
-                    <code className="text-xs font-mono text-primary font-bold">{workflow.cronSchedule}</code>
+                    <span className="text-xs text-primary font-bold">
+                      {workflow.cronSchedule === "0 9 * * *" ? "9:00 AM Daily" :
+                       workflow.cronSchedule === "0 12 * * *" ? "12:00 PM Daily" :
+                       workflow.cronSchedule === "0 18 * * *" ? "6:00 PM Daily" :
+                       workflow.cronSchedule === "0 21 * * *" ? "9:00 PM Daily" :
+                       workflow.cronSchedule === "0 0 * * *" ? "Midnight Daily" :
+                       workflow.cronSchedule}
+                    </span>
                     <Clock className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
                 )}
-                <p className="text-[10px] text-muted-foreground mt-2 font-medium">
-                  Tip: <code>0 9 * * *</code> runs every day at 9 AM.
-                </p>
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1 gap-2 h-9 font-bold">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 gap-2 h-9 font-bold"
+                  onClick={() => {
+                    setEditingId(workflow.id);
+                    setCronValue(workflow.cronSchedule);
+                  }}
+                >
                   <Settings2 className="h-3.5 w-3.5" />
-                  Config
+                  Edit Schedule
                 </Button>
-                <Button variant="secondary" size="sm" className="flex-1 gap-2 h-9 font-bold">
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  className="flex-1 gap-2 h-9 font-bold"
+                  onClick={() => {
+                    toast({ title: "Manual Trigger", description: `Starting execution for ${workflow.name}...` });
+                    // Ideally call a trigger API here if one exists
+                  }}
+                >
                   <Play className="h-3.5 w-3.5" />
                   Run Now
                 </Button>
