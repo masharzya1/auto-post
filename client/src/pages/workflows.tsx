@@ -9,12 +9,12 @@ import { type Workflow, type Content, insertWorkflowSchema } from "@shared/schem
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Play, Settings2, Clock, Calendar, BarChart3, CheckCircle2, Plus, Info, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { db, auth } from "@/lib/firebase";
-import { collection, getDocs, query, where, addDoc, updateDoc, doc, deleteDoc } from "firebase/firestore";
+import { collection, query, where, addDoc, updateDoc, doc, deleteDoc, onSnapshot } from "firebase/firestore";
 
 export default function WorkflowsPage() {
   const { toast } = useToast();
@@ -30,34 +30,40 @@ export default function WorkflowsPage() {
     }
   });
 
-  const { data: workflows, isLoading, error: workflowError } = useQuery<Workflow[]>({ 
+  const { data: workflows = [], isLoading } = useQuery<Workflow[]>({ 
     queryKey: ["workflows"],
     queryFn: async () => {
       if (!db || !auth?.currentUser) return [];
-      console.log("Fetching workflows for user:", auth.currentUser.uid);
-      const q = query(collection(db, "workflows"), where("userId", "==", auth.currentUser.uid));
-      const snap = await getDocs(q);
-      return snap.docs.map(doc => ({ ...doc.data(), id: doc.id }) as any);
-    }
+      return []; // Initial empty, useEffect handles sync
+    },
+    enabled: !!auth?.currentUser
   });
 
-  const { data: content, error: contentError } = useQuery<Content[]>({ 
+  const { data: content = [] } = useQuery<Content[]>({ 
     queryKey: ["content"],
-    queryFn: async () => {
-      if (!db || !auth?.currentUser) return [];
-      console.log("Fetching content for user:", auth.currentUser.uid);
-      const q = query(collection(db, "content"), where("userId", "==", auth.currentUser.uid));
-      const snap = await getDocs(q);
-      return snap.docs.map(doc => ({ ...doc.data(), id: doc.id }) as any);
-    }
+    queryFn: async () => [],
+    enabled: !!auth?.currentUser
   });
 
-  if (workflowError) {
-    console.error("Workflow query error:", workflowError);
-  }
-  if (contentError) {
-    console.error("Content query error:", contentError);
-  }
+  useEffect(() => {
+    if (!db || !auth?.currentUser) return;
+    const qWorkflows = query(collection(db, "workflows"), where("userId", "==", auth.currentUser.uid));
+    const unsubscribeWorkflows = onSnapshot(qWorkflows, (snap) => {
+      const data = snap.docs.map(doc => ({ ...doc.data(), id: doc.id }) as any);
+      queryClient.setQueryData(["workflows"], data);
+    });
+
+    const qContent = query(collection(db, "content"), where("userId", "==", auth.currentUser.uid));
+    const unsubscribeContent = onSnapshot(qContent, (snap) => {
+      const data = snap.docs.map(doc => ({ ...doc.data(), id: doc.id }) as any);
+      queryClient.setQueryData(["content"], data);
+    });
+
+    return () => {
+      unsubscribeWorkflows();
+      unsubscribeContent();
+    };
+  }, [auth?.currentUser?.uid]);
 
   const pendingItems = content?.filter(c => c.status === "pending").length || 0;
   const growth = "+12%";
@@ -68,7 +74,6 @@ export default function WorkflowsPage() {
       await updateDoc(doc(db, "workflows", id as string), { cronSchedule });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workflows"] });
       setEditingId(null);
       toast({ title: "Schedule updated" });
     },
@@ -76,7 +81,6 @@ export default function WorkflowsPage() {
 
   const triggerMutation = useMutation({
     mutationFn: async (id: string | number) => {
-      // Mock trigger
       await new Promise(r => setTimeout(r, 1000));
       return id;
     },
@@ -103,7 +107,6 @@ export default function WorkflowsPage() {
       return { ...data, id: docRef.id };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workflows"] });
       setIsCreateOpen(false);
       createForm.reset();
       toast({ title: "Workflow created" });
@@ -123,7 +126,6 @@ export default function WorkflowsPage() {
       if (!db) return;
       await updateDoc(doc(db, "workflows", id as string), { enabled });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["workflows"] }),
   });
 
   const deleteMutation = useMutation({
@@ -132,7 +134,6 @@ export default function WorkflowsPage() {
       await deleteDoc(doc(db, "workflows", id as string));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workflows"] });
       toast({ title: "Workflow removed" });
     },
   });

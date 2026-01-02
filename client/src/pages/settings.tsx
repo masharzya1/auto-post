@@ -13,7 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Key, Cpu, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { db, auth } from "@/lib/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
+import { useEffect } from "react";
 import { MODELS } from "@/lib/constants";
 
 export default function SettingsPage() {
@@ -28,6 +29,17 @@ export default function SettingsPage() {
       return docSnap.exists() ? docSnap.data() as Settings : null;
     }
   });
+
+  useEffect(() => {
+    if (!db || !auth?.currentUser) return;
+    const docRef = doc(db, "settings", auth.currentUser.uid);
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        queryClient.setQueryData(["settings"], docSnap.data());
+      }
+    });
+    return () => unsubscribe();
+  }, [auth?.currentUser?.uid]);
 
   const form = useForm<Settings>({
     resolver: zodResolver(insertSettingsSchema),

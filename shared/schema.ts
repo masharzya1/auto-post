@@ -2,6 +2,8 @@ import { pgTable, serial, text, integer, boolean, timestamp, jsonb } from "drizz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export * from "./models/chat";
+
 // Shared Firebase-style settings
 export const settings = pgTable("settings", {
   id: serial("id").primaryKey(),
