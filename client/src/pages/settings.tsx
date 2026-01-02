@@ -58,6 +58,14 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
       toast({ title: "Settings saved", description: "Updated in Firebase." });
     },
+    onError: (error: any) => {
+      console.error("Settings save error:", error);
+      toast({ 
+        title: "Save failed", 
+        description: error.message || "Failed to update settings in Firebase.",
+        variant: "destructive"
+      });
+    }
   });
 
   if (isLoading) {

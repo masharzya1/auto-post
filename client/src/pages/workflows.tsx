@@ -96,8 +96,17 @@ export default function WorkflowsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workflows"] });
       setIsCreateOpen(false);
+      createForm.reset();
       toast({ title: "Workflow created" });
     },
+    onError: (error: any) => {
+      console.error("Workflow creation error:", error);
+      toast({ 
+        title: "Creation failed", 
+        description: error.message || "Could not save workflow to Firebase.",
+        variant: "destructive"
+      });
+    }
   });
 
   const toggleMutation = useMutation({
