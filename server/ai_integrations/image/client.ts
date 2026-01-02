@@ -1,21 +1,17 @@
-import fs from "node:fs";
-import OpenAI, { toFile } from "openai";
-import { Buffer } from "node:buffer";
+import OpenAI from "openai";
+import { storage } from "../../storage";
 
-let _openai: OpenAI | null = null;
+export async function getOpenAIInstance(): Promise<OpenAI> {
+  const settings = await storage.getSettings();
+  const apiKey = settings?.openaiApiKey;
 
-export function getOpenAI(): OpenAI {
-  if (!_openai) {
-    const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error("AI_INTEGRATIONS_OPENAI_API_KEY is not set. Please set up the OpenAI AI integration.");
-    }
-    _openai = new OpenAI({
-      apiKey,
-      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-    });
+  if (!apiKey) {
+    throw new Error("OpenAI API Key is missing. Please provide it in the Settings page.");
   }
-  return _openai;
+
+  return new OpenAI({
+    apiKey,
+  });
 }
 
 /**
@@ -26,7 +22,7 @@ export async function generateImageBuffer(
   prompt: string,
   size: "1024x1024" | "512x512" | "256x256" = "1024x1024"
 ): Promise<Buffer> {
-  const response = await getOpenAI().images.generate({
+  const response = await (await getOpenAIInstance()).images.generate({
     model: "gpt-image-1",
     prompt,
     size,
@@ -52,7 +48,7 @@ export async function editImages(
     )
   );
 
-  const response = await getOpenAI().images.edit({
+  const response = await (await getOpenAIInstance()).images.edit({
     model: "gpt-image-1",
     image: images,
     prompt,

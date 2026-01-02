@@ -171,7 +171,9 @@ export default function SettingsPage() {
               <Key className="h-5 w-5 text-primary" />
               API Gateways
             </CardTitle>
-            <CardDescription>Securely store your provider credentials.</CardDescription>
+            <CardDescription>
+              Provide your own API keys to power the AI models. Your keys are stored securely in your database.
+            </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">

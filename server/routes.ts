@@ -5,6 +5,8 @@ import { db } from "./db";
 import { content, workflows, users, api, insertWorkflowSchema } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
+import { getOpenAIInstance } from "./ai_integrations/image/client";
+
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   app.post("/api/auth/sync", async (req, res) => {
     const { uid, email } = req.body;
@@ -83,8 +85,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const captionModel = s?.captionModel || "gpt-4o-mini";
       const photoModel = s?.photoModel || "gpt-image-1";
       
+      const openai = await getOpenAIInstance();
+      const response = await openai.chat.completions.create({
+        model: captionModel,
+        messages: [{ role: "user", content: `Generate a scheduled post for ${s?.niche || 'Universal'} niche` }],
+      });
+      
       const textData = { 
-        text: `AI Generated Caption (${captionModel}) for ${s?.niche || 'Universal'} niche. #sparkpost #automation`,
+        text: response.choices[0].message.content,
         model: captionModel 
       };
       const imageData = { 
