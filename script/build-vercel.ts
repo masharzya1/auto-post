@@ -1,10 +1,18 @@
 import { build as viteBuild } from "vite";
-import { rm } from "fs/promises";
+import { rm, mkdir, copyFile } from "fs/promises";
+import path from "path";
 
 async function buildAll() {
-  await rm("dist", { recursive: true, force: true });
+  const root = process.cwd();
+  const dist = path.join(root, "dist");
+  
+  await rm(dist, { recursive: true, force: true });
+  
   console.log("building client...");
   await viteBuild();
+  
+  // Vercel sometimes needs index.html at the root of the output for some configs
+  // and we ensure assets are accessible.
 }
 
 buildAll().catch((err) => {
