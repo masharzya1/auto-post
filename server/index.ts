@@ -66,7 +66,7 @@ app.post("/api/content/generate", async (req: Request, res: Response) => {
            n: 1,
            size: "1024x1024",
          });
-         imageUrl = response.data[0].url || imageUrl;
+         imageUrl = response.data?.[0]?.url || imageUrl;
       }
       
       res.json({
