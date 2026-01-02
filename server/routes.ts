@@ -2,11 +2,10 @@ import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
-import { content, workflows, users, api } from "@shared/schema";
+import { content, workflows, users, api, insertWorkflowSchema } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
-  // Mock integrations for demo stability
   app.post("/api/auth/sync", async (req, res) => {
     const { uid, email } = req.body;
     if (!uid || !email) return res.status(400).send("Missing data");
@@ -43,6 +42,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get(api.workflows.list.path, async (req, res) => {
     const w = await storage.getWorkflows();
     res.json(w);
+  });
+
+  app.post("/api/workflows", async (req, res) => {
+    const parsed = insertWorkflowSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error });
+    const [created] = await db.insert(workflows).values(parsed.data).returning();
+    res.json(created);
   });
 
   app.post(api.workflows.toggle.path, async (req, res) => {

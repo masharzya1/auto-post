@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles, Image, Video, FileText, Zap, Clock, Send, BarChart3 } from "lucide-react";
+import { Sparkles, Image, Video, FileText, Zap, Clock, Send, BarChart3, Info, PlayCircle } from "lucide-react";
 import type { Limits, Content, Workflow } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function Dashboard() {
   const { data: limits, isLoading: isLoadingLimits } = useQuery<Limits>({
@@ -22,7 +23,6 @@ export default function Dashboard() {
   const recentPosts = content?.slice(-5).reverse() || [];
   const activeWorkflows = workflows?.filter(w => w.enabled).length || 0;
   
-  // Calculate dynamic metrics
   const totalItems = content?.length || 0;
   const readyItems = content?.filter(c => c.status === "ready").length || 0;
   const engagementRate = totalItems > 0 ? Math.min(98, 70 + (readyItems / totalItems) * 28) : 0;
@@ -34,7 +34,8 @@ export default function Dashboard() {
       icon: FileText,
       description: "Total AI assets",
       color: "text-blue-500",
-      bg: "bg-blue-500/10"
+      bg: "bg-blue-500/10",
+      tooltip: "The total number of AI-generated captions and images in your library."
     },
     {
       title: "Images Created",
@@ -42,7 +43,8 @@ export default function Dashboard() {
       icon: Image,
       description: "Generation count",
       color: "text-purple-500",
-      bg: "bg-purple-500/10"
+      bg: "bg-purple-500/10",
+      tooltip: "How many visual assets you've created this month out of your plan's quota."
     },
     {
       title: "Active Workflows",
@@ -50,7 +52,8 @@ export default function Dashboard() {
       icon: Zap,
       description: "Running automation",
       color: "text-yellow-500",
-      bg: "bg-yellow-500/10"
+      bg: "bg-yellow-500/10",
+      tooltip: "The number of automation routines currently enabled and running on schedule."
     },
     {
       title: "Social Impact",
@@ -58,7 +61,8 @@ export default function Dashboard() {
       icon: BarChart3,
       description: "Estimated engagement",
       color: "text-green-500",
-      bg: "bg-green-500/10"
+      bg: "bg-green-500/10",
+      tooltip: "A smart score based on content quality and predicted social media reach."
     },
   ];
 
@@ -69,22 +73,61 @@ export default function Dashboard() {
         <p className="text-muted-foreground font-medium">Monitoring your AI content production engine.</p>
       </div>
 
+      {/* Guide Section */}
+      <Card className="bg-primary/5 border-primary/20 border-dashed overflow-hidden relative">
+        <div className="absolute top-0 right-0 p-4 opacity-10">
+          <PlayCircle className="h-24 w-24" />
+        </div>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-bold flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            Quick Start Guide
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-3">
+          <div className="space-y-1">
+            <p className="text-sm font-bold">1. Configure Settings</p>
+            <p className="text-xs text-muted-foreground">Add your Facebook Page ID and AI API keys in the settings panel.</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-bold">2. Create Workflows</p>
+            <p className="text-xs text-muted-foreground">Setup automation schedules in the Workflows page for hands-free posting.</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-bold">3. Generate & Post</p>
+            <p className="text-xs text-muted-foreground">Use the Content Library to manually generate and review assets before deployment.</p>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
-          <Card key={i} className="hover-elevate transition-all border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                {stat.title}
-              </CardTitle>
-              <div className={`${stat.bg} ${stat.color} p-2 rounded-lg`}>
-                <stat.icon className="h-4 w-4" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold tracking-tight">{stat.value}</div>
-              <p className="text-xs text-muted-foreground mt-1 font-medium">{stat.description}</p>
-            </CardContent>
-          </Card>
+          <TooltipProvider key={i}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Card className="hover-elevate transition-all border-border/50 cursor-help">
+                  <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                      {stat.title}
+                    </CardTitle>
+                    <div className={`${stat.bg} ${stat.color} p-2 rounded-lg`}>
+                      <stat.icon className="h-4 w-4" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold tracking-tight">{stat.value}</div>
+                    <p className="text-xs text-muted-foreground mt-1 font-medium flex items-center gap-1">
+                      {stat.description}
+                      <Info className="h-3 w-3 opacity-30" />
+                    </p>
+                  </CardContent>
+                </Card>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="w-48 text-xs">{stat.tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         ))}
       </div>
 

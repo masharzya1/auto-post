@@ -4,11 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { type Workflow, type Content } from "@shared/schema";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { type Workflow, type Content, insertWorkflowSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Play, Settings2, Clock, Calendar, BarChart3, CheckCircle2 } from "lucide-react";
+import { Loader2, Play, Settings2, Clock, Calendar, BarChart3, CheckCircle2, Plus, Info } from "lucide-react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function WorkflowsPage() {
   const { toast } = useToast();
@@ -16,10 +20,33 @@ export default function WorkflowsPage() {
   const { data: content } = useQuery<Content[]>({ queryKey: ["/api/content"] });
   const [editingId, setEditingId] = useState<number | null>(null);
   const [cronValue, setCronValue] = useState("");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const pendingItems = content?.filter(c => c.status === "pending").length || 0;
   const totalItems = content?.length || 0;
   const growth = totalItems > 0 ? "+24%" : "0%";
+
+  const createForm = useForm({
+    resolver: zodResolver(insertWorkflowSchema),
+    defaultValues: {
+      name: "",
+      enabled: true,
+      cronSchedule: "0 9 * * *",
+    }
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/workflows", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workflows"] });
+      setIsCreateOpen(false);
+      createForm.reset();
+      toast({ title: "Workflow created", description: "Your new automation is ready to go." });
+    },
+  });
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, enabled }: { id: number; enabled: boolean }) => {
@@ -28,7 +55,7 @@ export default function WorkflowsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/workflows"] });
-      toast({ title: "Workflow updated" });
+      toast({ title: "Workflow status updated" });
     },
   });
 
@@ -59,36 +86,86 @@ export default function WorkflowsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Workflows & Automation</h1>
           <p className="text-muted-foreground">Manage your content generation schedules and approval queues.</p>
         </div>
-        <Button data-testid="button-new-workflow">
-          Create New Workflow
-        </Button>
+        
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <DialogTrigger asChild>
+            <Button data-testid="button-new-workflow" className="gap-2">
+              <Plus className="h-4 w-4" />
+              Create New Workflow
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>New Content Workflow</DialogTitle>
+              <CardDescription>Configure an automated schedule for content generation.</CardDescription>
+            </DialogHeader>
+            <form onSubmit={createForm.handleSubmit((data) => createMutation.mutate(data))} className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label>Workflow Name</Label>
+                <Input {...createForm.register("name")} placeholder="e.g. Daily Motivation Posts" />
+              </div>
+              <div className="space-y-2">
+                <Label>Schedule (Cron Expression)</Label>
+                <Input {...createForm.register("cronSchedule")} placeholder="0 9 * * *" />
+                <p className="text-[10px] text-muted-foreground italic">Use <code>0 9 * * *</code> for 9:00 AM daily.</p>
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Establish Workflow
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="bg-primary/5 border-primary/20 hover-elevate transition-all">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2 uppercase tracking-wider text-primary">
-              <CheckCircle2 className="h-4 w-4" />
-              Approval Queue
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingItems}</div>
-            <p className="text-xs text-muted-foreground font-medium">Items waiting for review</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-blue-500/5 border-blue-500/20 hover-elevate transition-all">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2 uppercase tracking-wider text-blue-500">
-              <BarChart3 className="h-4 w-4" />
-              Engagement
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{growth}</div>
-            <p className="text-xs text-muted-foreground font-medium">Performance this week</p>
-          </CardContent>
-        </Card>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Card className="bg-primary/5 border-primary/20 hover-elevate transition-all cursor-help">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2 uppercase tracking-wider text-primary">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Approval Queue
+                    <Info className="h-3 w-3 opacity-50 ml-auto" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{pendingItems}</div>
+                  <p className="text-xs text-muted-foreground font-medium">Items waiting for review</p>
+                </CardContent>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Generated content items that require manual approval before posting.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Card className="bg-blue-500/5 border-blue-500/20 hover-elevate transition-all cursor-help">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2 uppercase tracking-wider text-blue-500">
+                    <BarChart3 className="h-4 w-4" />
+                    Engagement
+                    <Info className="h-3 w-3 opacity-50 ml-auto" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{growth}</div>
+                  <p className="text-xs text-muted-foreground font-medium">Performance this week</p>
+                </CardContent>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Weekly trend of interactions and reach across connected platforms.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
