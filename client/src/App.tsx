@@ -22,7 +22,13 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
   useEffect(() => {
-    handleAuthRedirect();
+    const checkRedirect = async () => {
+      const user = await handleAuthRedirect();
+      if (user) {
+        // Redirect handled, onAuthStateChanged will pick up the user
+      }
+    };
+    checkRedirect();
   }, []);
 
   if (loading) {
